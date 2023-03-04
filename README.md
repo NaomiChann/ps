@@ -5,19 +5,18 @@
 
 
 '''
-
 #include<stdio.h>
 #include<conio.h>
 
 int multiplicaNum ( int N1, int N2 ) 
 {
+
   int resultado;
   resultado = N1 * N2;
   return( resultado ) ;
+  
 }
-
 '''
-
 ========================="
 "Funcão: multiplicaNum
 -------------------------"
@@ -25,7 +24,6 @@ Descrição: Uma função que recebe dois inteiros e retorna a multiplicação d
 ========================="
 
 '''
-
 int main( void )
 {
   int V1, V2, resultado;
@@ -44,7 +42,6 @@ int main( void )
   return 0;
   
 }
-
 '''
 
 ##**Referências:**
