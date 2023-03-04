@@ -1,6 +1,6 @@
 - O código (isto é, nomes de variáveis, funções, arquivos e comentários) deve ser escrito em inglês.
 
-- Uso de indentação por tabs equivalentes a 4 espaços.
+- Uso de indentação por tabs **equivalentes** a 4 espaços.
 
 - Os atributos devem ser protegidos por padrão, a não ser que a classe seja uma folha da herança, onde deve-se, quando possível, usar o tipo privado. Estas delimitações poderão ser alteradas em casos específicos avaliados pelo grupo.
 
