@@ -7,11 +7,16 @@ int main() //int argc, char const *argv[])
 	char opcode[9];
 	int instSize;
 
-	while ( fscanf( inputFile, "%s", opcode ) == 1 )
-	// todo: fix double reading on last pass
+	while ( 1 )
 	{
     
 		fscanf( inputFile, "%s", opcode );
+
+		if ( feof( inputFile ) )
+		{
+			break;
+		}
+
 		instSize = ( ( int ) strlen( opcode ) ) / 2;
 		printf( "%s ", opcode );
 		printf( "%d bytes format, ", instSize );
