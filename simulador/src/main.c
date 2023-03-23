@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main() //int argc, char const *argv[])
+int main() //int argc, char const *argv[])  AAAAAAAAAAASS
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
 	char opcode[9];
