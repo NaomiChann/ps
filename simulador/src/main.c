@@ -58,7 +58,8 @@ void memory ( int numBytes )
 {
 	globalMem += numBytes;
 
-	if( globalMem > 1000 ){
+	if( globalMem > 1000 )
+	{
 		printf( "You have exceeded the memory size that is 1K" );
 		exit( 1 );
 	}
