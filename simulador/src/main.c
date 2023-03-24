@@ -10,6 +10,11 @@ char * IntToHex( int n );
 void Memory( int numBytes );
 char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
+void AlolanExeggcutor( int iopcode );
+
+void Bitoa(int n, char s[]);
+int Batoi(char s[]);
+void Breverse(char s[]);
 
 int globalMem;
 
@@ -107,7 +112,7 @@ char * IntToBinary( int n )
 
 	for( i = i - 1; i >= 0; i-- )
 	{
-		itoa( bin[i], temp, 10 );
+		Bitoa( bin[i], temp );
 		strcat( string, temp );
 	}
 
@@ -161,7 +166,7 @@ containing the value as a hexadecimal
 char * IntToHex( int n )
 {
 	static char hex[4];
-	itoa( n, hex, 16 );
+	Bitoa( n, hex );
 
 	return hex;
 }
@@ -307,3 +312,133 @@ char * InstructionTable( const char *s )
 	fclose( table );
 	return instructions; 
 }
+
+void AlolanExeggcutor( int iopcode )
+{
+	switch ( iopcode )
+	{
+	case 24: // ADD
+		break;
+	case 144: // ADDR
+		break;
+	case 64: // AND
+		break;
+	case 180: // CLEAR
+		break;
+	case 40: // COMP
+		break;
+	case 160: // COMPR
+		break;
+	case 36: // DIV
+		break;
+	case 156: // DIVR
+		break;
+	case 60: // J
+		break;
+	case 48: // JEQ
+		break;
+	case 52: // JGT
+		break;
+	case 56: // JLT
+		break;
+	case 72: // JSUB
+		break;
+	case 0: // LDA
+		break;
+	case 104: // LDB
+		break;
+	case 80: // LDCH
+		break;
+	case 8: // LDL
+		break;
+	case 108: // LDS
+		break;
+	case 116: // LDT
+		break;
+	case 4: // LDX
+		break;
+	case 32: // MUL
+		break;
+	case 152: // MULR
+		break;
+	case 68: // OR
+		break;
+	case 172: // RMO
+		break;
+	case 76: // RSUB
+		break;
+	case 164: // SHIFTL
+		break;
+	case 168: // SHIFTR
+		break;
+	case 12: // STA
+		break;
+	case 120: // STB
+		break;
+	case 84: // STCH
+		break;
+	case 20: // STL
+		break;
+	case 124: // STS
+		break;
+	case 132: // STT
+		break;
+	case 16: // STX
+		break;
+	case 28: // SUB
+		break;
+	case 148: // SUBR
+		break;
+	case 44: // TIX
+		break;
+	case 184: // TIXR
+		break;
+	
+	default:
+		printf( "ERROR" );
+		break;
+	}
+}
+
+/* Bitoa:  convert n to characters in s */
+void Bitoa(int n, char s[])
+{
+	int i, sign;
+
+	if ((sign = n) < 0)  /* record sign */
+		n = -n;          /* make n positive */
+	i = 0;
+	do {       /* generate digits in Breverse order */
+		s[i++] = n % 10 + '0';   /* get next digit */
+	} while ((n /= 10) > 0);     /* delete it */
+	if (sign < 0)
+		s[i++] = '-';
+	s[i] = '\0';
+	Breverse(s);
+}
+
+/* Batoi: convert s to integer */
+int Batoi(char s[])
+{
+	int i, n;
+	n = 0;
+	for(i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
+	{
+		n = 10 * n + (s[i] - '0');
+	}
+
+	return(n);
+}
+
+ /* Breverse:  Breverse string s in place */
+void Breverse(char s[])
+{
+	int i, j;
+	char c;
+
+	for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+		c = s[i];
+		s[i] = s[j];
+		s[j] = c;
+	}
+}  
