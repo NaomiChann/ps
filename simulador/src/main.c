@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
 void SixBitOp( char * obj );
+char * InstructionTable( const char *s );
 
 int globalMem;
 
@@ -15,7 +17,12 @@ int main()
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
 	char objCode[9], temp[2], temp2[3];
 	int instSize;
-
+// if error in reading file
+	if( !inputFile ) 
+	{
+			fputs("inputFile error.\n", stderr);
+			return exit(1);
+	}
 // reads until eof
 	while ( 1 )
 	{
@@ -154,7 +161,6 @@ char * IntToHex( int n )
 ===================
 Memory
 -------------------
-
 ===================
 */
 void Memory( int numBytes ) 
@@ -204,4 +210,36 @@ void SixBitOp( char * obj )
 		}
 
 	}
+}
+
+/*
+===================
+InstructionTable
+-------------------
+Checks the upcode in hexadecimal format 
+and returns the name of the instruction
+===================
+*/
+char * InstructionTable( const char *s )
+{
+	char line[1024];
+	char *instructions;
+	FILE *table = fopen( "InstructionTable.txt", "r" );
+
+	if( !table ) 
+	{
+        fputs("File error.\n", stderr);
+        return exit(1);
+    }
+
+	while ( fgets( line , sizeof(line) , table )!= NULL )
+    {
+      if (strstr(line , s )!= NULL)
+      {
+		memcpy( instructions, line, 5 );
+		printf("%s\n",instructions);
+      }
+    }
+	fclose( table );
+	return instructions; 
 }
