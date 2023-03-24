@@ -225,23 +225,19 @@ and returns the name of the instruction
 char * InstructionTable( const char *s )
 {
 	char line[1024];
-	char *instructions;
+	char instructions[10];
 	FILE *table = fopen( "InstructionTable.txt", "r" );
 
-	if( !table ) 
-	{
-        fputs("File error.\n", stderr);
-        return exit(1);
-    }
 
 	while ( fgets( line , sizeof(line) , table )!= NULL )
     {
-      if (strstr(line , s )!= NULL)
+      if (strcmp(line , s ))
       {
-		memcpy( instructions, line, 5 );
+		memcpy(instructions, line, 3 );
 		printf("%s\n",instructions);
       }
     }
 	fclose( table );
 	return instructions; 
 }
+
