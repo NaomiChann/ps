@@ -6,7 +6,7 @@ int globalMem;
 
 void memory ( int numBytes ) ;
 
-int main() //
+int main() //cu
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
 	char opcode[9];
