@@ -7,7 +7,7 @@ char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
-void SixBitOp( char * obj );
+char * SixBitOp( char * obj );
 char * InstructionTable( const char *s );
 
 int globalMem;
@@ -15,7 +15,7 @@ int globalMem;
 int main()
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
-	char objCode[9], temp[2], temp2[3];
+	char objCode[9], temp[2], temp2[3], opcode[3];
 	int instSize;
 // if error in reading file
 	if( !inputFile ) 
@@ -56,12 +56,14 @@ int main()
 				Memory( 2 );
 				break;
 			case 3:
-				SixBitOp( objCode );
+				opcode = SixBitOp( objCode );
+				InstructionTable(opcode);
 				printf( "6 bits op, 6 bits nixbpe \n" );
 				Memory( 3 );
 				break;
 			case 4:
-				SixBitOp( objCode );
+				opcode = SixBitOp( objCode );
+				InstructionTable(opcode);
 				printf( "6 bits op, 6 bits nixbpe \n" );
 				break;
 			default:
@@ -182,7 +184,7 @@ Treats the object code for 3 and 4 byte formats
 extracting its instruction opcode and flags
 ===================
 */
-void SixBitOp( char * obj )
+char * SixBitOp( char * obj )
 {
 	for ( int i = 0; i < 3; i++ )
 	{
@@ -210,13 +212,14 @@ void SixBitOp( char * obj )
 		}
 
 	}
+	return opcode;
 }
 
 /*
 ===================
 InstructionTable
 -------------------
-Checks the upcode in hexadecimal format 
+Checks the opcode in hexadecimal format 
 and returns the name of the instruction
 ===================
 */
