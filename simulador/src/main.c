@@ -27,7 +27,7 @@ int main()
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
 	char objCode[9];
 	char opcode[3], flags[7], lastBits[6];
-	int instSize, opcodeInt;
+	int instSize, opcodeInt, pc = 0;
 	bool flag[6];
 
 	char temp[2], temp2[3];
@@ -50,7 +50,8 @@ int main()
 // checks the string size to determine the instruction format
 		instSize = ( ( int ) strlen( objCode ) );
 // debug
-		printf( "%s ", objCode );
+		printf( "%X | %s ", pc, objCode );
+		pc += instSize / 2;
 // each pair of hex values is a byte
 		switch ( instSize / 2 )
 		{
