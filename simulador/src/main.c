@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
@@ -21,7 +22,7 @@ int main()
 	if( !inputFile ) 
 	{
 			fputs("inputFile error.\n", stderr);
-			return exit(1);
+			return EXIT_FAILURE;
 	}
 // reads until eof
 	while ( 1 )
@@ -40,15 +41,13 @@ int main()
 		switch ( instSize / 2 )
 		{
 			case 1:
-				printf( "8 bits op \n" );
 // since there are no 1 byte instructions on our table
 // this can only be a variable label
 				Memory( 1 );
 				break;
 			case 2:
-				printf( "8 bits op, 4 bits r1, 4 bits r2 " );
 				memcpy( temp2, objCode, 2 );
-				printf( "%s ", temp );
+				printf( "%s ", temp2 );
 				memcpy( temp, &objCode[2], 1 );
 				printf( "r1 %s ", temp );
 				memcpy( temp, &objCode[3], 1 );
@@ -56,15 +55,13 @@ int main()
 				Memory( 2 );
 				break;
 			case 3:
-				opcode = SixBitOp( objCode );
-				InstructionTable(opcode);
-				printf( "6 bits op, 6 bits nixbpe \n" );
+				strcpy( opcode, SixBitOp( objCode ) );
+				InstructionTable( opcode );
 				Memory( 3 );
 				break;
 			case 4:
-				opcode = SixBitOp( objCode );
-				InstructionTable(opcode);
-				printf( "6 bits op, 6 bits nixbpe \n" );
+				strcpy( opcode, SixBitOp( objCode ) );
+				InstructionTable( opcode );
 				break;
 			default:
 				printf( "SIZE ERROR \n" );
@@ -91,7 +88,7 @@ char * IntToBinary( int n )
 	int bin[5], i;
 	static char string[5];
 	char temp[5] = "";
-	strcpy( string, "" );
+	memset( string, '\0', 5 );
 	
 	for( i = 0; n > 0; i++ )
 	{
@@ -186,9 +183,11 @@ extracting its instruction opcode and flags
 */
 char * SixBitOp( char * obj )
 {
+	static char opcode[3];
+	memset( opcode, '\0', 3 );
 	for ( int i = 0; i < 3; i++ )
 	{
-		char holder[2], op[5], opcode[3];
+		char holder[2], op[5];
 		int decimalHex;
 		memcpy( holder, &obj[i], 1 );
 		decimalHex = ( int ) strtol( holder, NULL, 16 );
@@ -199,12 +198,17 @@ char * SixBitOp( char * obj )
 				strcpy( opcode, IntToHex( BinaryToInt( IntToBinary( decimalHex ) ) ) );
 				break;
 			case 1:
-				char temp[3] = "";
+				char temp[3] = "", sup[3] = "";
 				memcpy( temp, IntToBinary( decimalHex ), 2 );
 				strcpy( op, temp );
 				strcat( op, "00" );
 				strcat( opcode, IntToHex( BinaryToInt( op ) ) );
 
+				for ( int j = 0; j < 2; j++ )
+				{ 
+					sup[j] = toupper( opcode[j] ); 
+				}
+				strcpy( opcode, sup );
 				printf( "%s \n", opcode );
 				break;
 			default:
@@ -224,20 +228,20 @@ and returns the name of the instruction
 */
 char * InstructionTable( const char *s )
 {
-	char line[1024];
-	char instructions[10];
+	char line[10], temp[4] = " ";
+	static char instructions[10];
 	FILE *table = fopen( "InstructionTable.txt", "r" );
+	memset( instructions, '\0', 10 );
 
-
-	while ( fgets( line , sizeof(line) , table )!= NULL )
+	while ( fgets( line , sizeof( line ) , table ) != NULL )
     {
-      if (strcmp(line , s ))
+      if ( strstr( line, s ) )
       {
-		memcpy(instructions, line, 3 );
-		printf("%s\n",instructions);
+		strcat( temp, s );
+		memcpy( instructions, line, ( int ) strcspn( line, temp ) );
+		printf( "%s \n",instructions );
       }
     }
 	fclose( table );
 	return instructions; 
 }
-
