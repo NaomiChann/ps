@@ -8,7 +8,7 @@ char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
-char * SixBitOp( char * obj );
+char * SixBitOp( char * obj, int * iopcode );
 char * InstructionTable( const char *s );
 
 int globalMem;
@@ -17,11 +17,12 @@ int main()
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
 	char objCode[9], temp[2], temp2[3], opcode[3];
-	int instSize;
-// if error in reading file
+	int instSize, iopcode;
+
+// if error reading file
 	if( !inputFile ) 
 	{
-			fputs("inputFile error.\n", stderr);
+			fputs( "inputFile error.\n", stderr );
 			return EXIT_FAILURE;
 	}
 // reads until eof
@@ -37,7 +38,7 @@ int main()
 		instSize = ( ( int ) strlen( objCode ) );
 // debug
 		printf( "%s ", objCode );
-
+// each pair of hex values is a byte
 		switch ( instSize / 2 )
 		{
 			case 1:
@@ -46,6 +47,7 @@ int main()
 				Memory( 1 );
 				break;
 			case 2:
+// 1st byte as op, 2nd byte both r1 and r2 each with 4 bits
 				memcpy( temp2, objCode, 2 );
 				printf( "%s ", temp2 );
 				memcpy( temp, &objCode[2], 1 );
@@ -55,12 +57,12 @@ int main()
 				Memory( 2 );
 				break;
 			case 3:
-				strcpy( opcode, SixBitOp( objCode ) );
+				strcpy( opcode, SixBitOp( objCode, &iopcode ) );
 				InstructionTable( opcode );
 				Memory( 3 );
 				break;
 			case 4:
-				strcpy( opcode, SixBitOp( objCode ) );
+				strcpy( opcode, SixBitOp( objCode, &iopcode ) );
 				InstructionTable( opcode );
 				break;
 			default:
@@ -181,16 +183,16 @@ Treats the object code for 3 and 4 byte formats
 extracting its instruction opcode and flags
 ===================
 */
-char * SixBitOp( char * obj )
+char * SixBitOp( char * obj, int * iopcode )
 {
 	static char opcode[3];
+	int decimal = 0;
 	memset( opcode, '\0', 3 );
 	for ( int i = 0; i < 3; i++ )
 	{
-		char holder[2], op[5];
-		int decimalHex;
+		char holder[2] = "", op[5];
 		memcpy( holder, &obj[i], 1 );
-		decimalHex = ( int ) strtol( holder, NULL, 16 );
+		int decimalHex = ( int ) strtol( holder, NULL, 16 );
 
 		switch ( i )
 		{
@@ -215,6 +217,18 @@ char * SixBitOp( char * obj )
 				break;
 		}
 	}
+	for ( int i = 0; i < 2; i++ )
+	{
+		char holder[2];
+		memcpy( holder, &opcode[i], 1 );
+		if ( i == 0 )
+		{
+			decimal = 16 * ( ( int ) strtol( holder, NULL, 16 ) );
+		} else {
+			decimal += ( int ) strtol( holder, NULL, 16 );
+		}
+	}
+	*iopcode = decimal;
 	return opcode;
 }
 
