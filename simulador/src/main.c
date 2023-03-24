@@ -8,7 +8,7 @@ char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
-char * SixBitOp( char * obj, int * iopcode );
+char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
 
 int globalMem;
@@ -16,7 +16,7 @@ int globalMem;
 int main()
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
-	char objCode[9], temp[2], temp2[3], opcode[3];
+	char objCode[9], temp[2], temp2[3], opcode[3], flags[7], lastBits[21];
 	int instSize, iopcode;
 
 // if error reading file
@@ -44,25 +44,32 @@ int main()
 			case 1:
 // since there are no 1 byte instructions on our table
 // this can only be a variable label
+				printf( "\n" );
 				Memory( 1 );
 				break;
 			case 2:
 // 1st byte as op, 2nd byte both r1 and r2 each with 4 bits
+				memset( temp, '\0', 2 );
+				memset( temp2, '\0', 3 );
 				memcpy( temp2, objCode, 2 );
-				printf( "%s ", temp2 );
+				printf( "\nopcode %s \n", temp2 ); // temp2 = opcode
+
 				memcpy( temp, &objCode[2], 1 );
-				printf( "r1 %s ", temp );
+				printf( "r1 %s ", temp ); // temp = r1
+
 				memcpy( temp, &objCode[3], 1 );
-				printf( "r2 %s \n", temp );
+				printf( "r2 %s \n", temp ); // temp = r2
+
+				InstructionTable( temp2 );
 				Memory( 2 );
 				break;
 			case 3:
-				strcpy( opcode, SixBitOp( objCode, &iopcode ) );
+				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
 				InstructionTable( opcode );
 				Memory( 3 );
 				break;
 			case 4:
-				strcpy( opcode, SixBitOp( objCode, &iopcode ) );
+				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
 				InstructionTable( opcode );
 				break;
 			default:
@@ -91,7 +98,7 @@ char * IntToBinary( int n )
 	static char string[5];
 	char temp[5] = "";
 	memset( string, '\0', 5 );
-	
+
 	for( i = 0; n > 0; i++ )
 	{
 		bin[i] = n % 2;
@@ -106,6 +113,7 @@ char * IntToBinary( int n )
 
 	strcpy( temp, "0" );
 
+// adds 0 to the left until it's a 4 character string
 	while ( ( int ) strlen( string ) < 4 )
 	{
 		strcat( temp, string );
@@ -162,6 +170,7 @@ char * IntToHex( int n )
 ===================
 Memory
 -------------------
+Description required
 ===================
 */
 void Memory( int numBytes ) 
@@ -183,44 +192,62 @@ Treats the object code for 3 and 4 byte formats
 extracting its instruction opcode and flags
 ===================
 */
-char * SixBitOp( char * obj, int * iopcode )
+char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 {
 	static char opcode[3];
+	char holder[2] = "";
 	int decimal = 0;
 	memset( opcode, '\0', 3 );
+	memset( flags, '\0', 7 );
 	for ( int i = 0; i < 3; i++ )
 	{
-		char holder[2] = "", op[5];
+
+// individually translates each hex byte into a decimal integer
+		char op[5], holder2[5];
 		memcpy( holder, &obj[i], 1 );
 		int decimalHex = ( int ) strtol( holder, NULL, 16 );
 
+// treats each byte individually
 		switch ( i )
 		{
-			case 0:
+			case 0: // byte 1
 				strcpy( opcode, IntToHex( BinaryToInt( IntToBinary( decimalHex ) ) ) );
 				break;
-			case 1:
+			case 1: // byte 2
 				char temp[3] = "", sup[3] = "";
-				memcpy( temp, IntToBinary( decimalHex ), 2 );
+				strcpy( holder2, IntToBinary( decimalHex ) );
+				memcpy( temp, holder2, 2 );
 				strcpy( op, temp );
+// adds two bits 0 at the end for a total of 4 bits
+// and translates it back to hex
 				strcat( op, "00" );
 				strcat( opcode, IntToHex( BinaryToInt( op ) ) );
 
+// capitalizes any characters in the hex string
 				for ( int j = 0; j < 2; j++ )
 				{ 
 					sup[j] = toupper( opcode[j] ); 
 				}
 				strcpy( opcode, sup );
-				printf( "%s \n", opcode );
+				printf( "\nopcode %s \n", opcode );
+
+				memcpy( flags, &holder2[2], 2 );
+				break;
+			case 2: // byte 3
+				strcat( flags, IntToBinary( decimalHex ) );
+				printf( "flags %s \n", flags );
 				break;
 			default:
 				break;
 		}
 	}
+
 	for ( int i = 0; i < 2; i++ )
 	{
 		char holder[2];
 		memcpy( holder, &opcode[i], 1 );
+
+// converts a hex string into a decimal integer
 		if ( i == 0 )
 		{
 			decimal = 16 * ( ( int ) strtol( holder, NULL, 16 ) );
@@ -228,6 +255,21 @@ char * SixBitOp( char * obj, int * iopcode )
 			decimal += ( int ) strtol( holder, NULL, 16 );
 		}
 	}
+
+	memcpy( lastBits, &obj[3], 3 );
+
+	if ( strlen( obj ) == 8 ) // 4 more bits
+	{
+		strcat( lastBits, &obj[6] );
+		printf( "address %s \n", lastBits );
+	} else {
+		printf( "displacement %s \n", lastBits );
+	}
+
+	
+
+// changes iopcode through pointers so function
+// can still return opcode's string
 	*iopcode = decimal;
 	return opcode;
 }
@@ -244,6 +286,7 @@ char * InstructionTable( const char *s )
 {
 	char line[10], temp[4] = " ";
 	static char instructions[10];
+	bool test = false;
 	FILE *table = fopen( "InstructionTable.txt", "r" );
 	memset( instructions, '\0', 10 );
 
@@ -254,8 +297,13 @@ char * InstructionTable( const char *s )
 		strcat( temp, s );
 		memcpy( instructions, line, ( int ) strcspn( line, temp ) );
 		printf( "%s \n",instructions );
+		test = true;
       }
     }
+	if ( test == false )
+	{
+		printf( "Instruction not found \n" );
+	}
 	fclose( table );
 	return instructions; 
 }
