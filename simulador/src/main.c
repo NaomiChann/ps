@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "kernighan.h"
 
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
@@ -11,10 +12,6 @@ void Memory( int numBytes );
 char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
 void AlolanExeggcutor( int iopcode );
-
-void Bitoa(int n, char s[]);
-int Batoi(char s[]);
-void Breverse(char s[]);
 
 int globalMem;
 
@@ -112,7 +109,7 @@ char * IntToBinary( int n )
 
 	for( i = i - 1; i >= 0; i-- )
 	{
-		Bitoa( bin[i], temp );
+		itoaB( bin[i], temp, 10 );
 		strcat( string, temp );
 	}
 
@@ -166,7 +163,7 @@ containing the value as a hexadecimal
 char * IntToHex( int n )
 {
 	static char hex[4];
-	Bitoa( n, hex );
+	itoaB( n, hex, 16 );
 
 	return hex;
 }
@@ -399,46 +396,3 @@ void AlolanExeggcutor( int iopcode )
 		break;
 	}
 }
-
-/* Bitoa:  convert n to characters in s */
-void Bitoa(int n, char s[])
-{
-	int i, sign;
-
-	if ((sign = n) < 0)  /* record sign */
-		n = -n;          /* make n positive */
-	i = 0;
-	do {       /* generate digits in Breverse order */
-		s[i++] = n % 10 + '0';   /* get next digit */
-	} while ((n /= 10) > 0);     /* delete it */
-	if (sign < 0)
-		s[i++] = '-';
-	s[i] = '\0';
-	Breverse(s);
-}
-
-/* Batoi: convert s to integer */
-int Batoi(char s[])
-{
-	int i, n;
-	n = 0;
-	for(i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
-	{
-		n = 10 * n + (s[i] - '0');
-	}
-
-	return(n);
-}
-
- /* Breverse:  Breverse string s in place */
-void Breverse(char s[])
-{
-	int i, j;
-	char c;
-
-	for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
-		c = s[i];
-		s[i] = s[j];
-		s[j] = c;
-	}
-}  
