@@ -202,6 +202,5 @@ void SixBitOp( char * obj )
 			default:
 				break;
 		}
-
 	}
 }
