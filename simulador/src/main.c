@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,22 +5,32 @@
 #include <ctype.h>
 #include "kernighan.h"
 
+#define N 0
+#define I 1
+#define X 2
+#define B 3
+#define P 4
+#define E 5
+
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
-char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits );
+char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
-void AlolanExeggcutor( int iopcode , int * L, int * A, int * B, int * S, int * T, int * X,  int * PC,  char * SW,  int *addressM);
+void AlolanExeggcutor( int opcodeInt );
 
 int globalMem;
 
 int main()
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
-	char objCode[9], temp[2], temp2[3], opcode[3], flags[7], lastBits[21];
-	int instSize, iopcode;
-	int *L, *A, *B, *S, *T, *X, *PC, *SW;
+	char objCode[9];
+	char opcode[3], flags[7], lastBits[6];
+	int instSize, opcodeInt, pc = 0;
+	bool flag[6];
+
+	char temp[2], temp2[3];
 
 // if error reading file
 	if( !inputFile ) 
@@ -41,7 +50,8 @@ int main()
 // checks the string size to determine the instruction format
 		instSize = ( ( int ) strlen( objCode ) );
 // debug
-		printf( "%s ", objCode );
+		printf( "%X | %s ", pc, objCode );
+		pc += instSize / 2;
 // each pair of hex values is a byte
 		switch ( instSize / 2 )
 		{
@@ -60,29 +70,60 @@ int main()
 
 				memcpy( temp, &objCode[2], 1 );
 				printf( "r1 %s ", temp ); // temp = r1
-				*S = atoi(temp);
 
 				memcpy( temp, &objCode[3], 1 );
 				printf( "r2 %s \n", temp ); // temp = r2
-				*T = atoi(temp);
 
 				InstructionTable( temp2 );
 				Memory( 2 );
 				break;
 			case 3:
-				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
+				flag[E] = false;
+				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
+
+				for( int i = 0; i < 5; i++ )
+				{
+					memcpy( temp, &flags[i], 1 );
+					if ( strcmp( temp, "1" ) == 0 ) {
+						flag[i] = true;
+					} else {
+						flag[i] = false;
+					}
+				}
+
 				Memory( 3 );
 				break;
 			case 4:
-				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
+				flag[E] = true;
+				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
+
+				for( int i = 0; i < 5; i++ )
+				{
+					memcpy( temp, &flags[i], 1 );
+					if ( strcmp( temp, "1" ) == 0 ) {
+						flag[i] = true;
+					} else {
+						flag[i] = false;
+					}
+				}
 				break;
 			default:
 				printf( "SIZE ERROR \n" );
 				break;
 		}
-		printf( "============= \n" );
+
+		for ( int i = 0; i < 6; i++ )
+		{
+			if ( ( instSize / 2 ) > 2 && flag[i] == true )
+			{
+				printf( "1" );
+			} else {
+				printf( "0" );
+			}
+		}
+		printf( "\n============= \n" );
 	}
 	printf( "Memory used: %d Bytes \n", globalMem );
 	fclose( inputFile );
@@ -198,14 +239,13 @@ Treats the object code for 3 and 4 byte formats
 extracting its instruction opcode and flags
 ===================
 */
-char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
+char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 {
 	static char opcode[3];
 	char holder[2] = "";
 	int decimal = 0;
-	char temp[3] = "", sup[3] = "";
-
 	memset( opcode, '\0', 3 );
+	memset( lastBits, '\0', 6 );
 	memset( flags, '\0', 7 );
 	for ( int i = 0; i < 3; i++ )
 	{
@@ -222,6 +262,7 @@ char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 				strcpy( opcode, IntToHex( BinaryToInt( IntToBinary( decimalHex ) ) ) );
 				break;
 			case 1: // byte 2
+				char temp[3] = "", sup[3] = "";
 				strcpy( holder2, IntToBinary( decimalHex ) );
 				memcpy( temp, holder2, 2 );
 				strcpy( op, temp );
@@ -242,7 +283,7 @@ char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 				break;
 			case 2: // byte 3
 				strcat( flags, IntToBinary( decimalHex ) );
-				printf( "flags %s \n", flags );
+				//printf( "flags %s \n", flags );
 				break;
 			default:
 				break;
@@ -273,11 +314,9 @@ char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 		printf( "displacement %s \n", lastBits );
 	}
 
-	
-
-// changes iopcode through pointers so function
+// changes opcodeInt through pointers so function
 // can still return opcode's string
-	*iopcode = decimal;
+	*opcodeInt = decimal;
 	return opcode;
 }
 
@@ -315,176 +354,89 @@ char * InstructionTable( const char *s )
 	return instructions; 
 }
 
-void AlolanExeggcutor( int iopcode , int * L, int * A, int * B, int * S, int * T, int * X,  int * PC,  char * SW,  int *addressM)
+void AlolanExeggcutor( int opcodeInt )
 {
-	char *temp;
-	temp = *SW;
-	switch ( iopcode )
-	{//r1   s     r2  t
-		case 24: // ADD
-			*A = *A + addressM;
-			break;
-		case 144: // ADDR
-			*T = *T + *S;
-			break;
-		case 64: // AND
-			*A = *A;
-			break;
-		case 180: // CLEAR
-			*S = 0;
-			break;
-		case 40: // COMP
-			if(*A == addressM){
-				*SW = "equals";
-			}
-			else if(*A >= addressM){
-				*SW = "greater";
-			}
-			else{
-				*SW = "lesser";
-			}
-			break;
-		case 160: // COMPR
-			if(*S == *T){
-				*SW = "equals";
-			}
-			else if(*S >= *T){
-				*SW = "greater";
-			}
-			else{
-				*SW = "lesser";
-			}
-			break;
-		case 36: // DIV
-			*A = *A / *addressM;
-			break;
-		case 156: // DIVR
-			*T = *T / *S;
-			break;
-		case 60: // J
-			*PC = addressM; 
-			break;
-		case 48: // JEQ
-			if(strcmp(temp,"equals"))
-			{
-				*PC = addressM;
-			}
-			break;
-		case 52: // JGT
-			if(strcmp(temp,"greater"))
-			{
-				*PC = addressM;
-			}
-			break;
-		case 56: // JLT
-			if(strcmp(temp,"lesser"))
-			{
-				*PC = addressM;
-			}
-			break;
-		case 72: // JSUB
-			*L = *PC;
-			*PC = addressM; 
-			break;
-		case 0: // LDA
-			*A = addressM;
-			break;
-		case 104: // LDB
-			*B = addressM;
-			break;
-		case 80: // LDCH
-			// m as hex into temp
-			// A to string of hex
-			memcpy( &A[5], temp, 1 );
-			break;
-		case 8: // LDL
-			*L = addressM;
-			break;
-		case 108: // LDS
-			*S = addressM;
-			break;
-		case 116: // LDT
-			*T = addressM;
-			break;
-		case 4: // LDX
-			*X = addressM;
-			break;
-		case 32: // MUL
-			*A = (*A) * *addressM;
-			break;
-		case 152: // MULR
-			*T = (*T) * (*S);
-			break;
-		case 68: // OR
-			*A = (*A) || addressM;
-			break;
-		case 172: // RMO
-			*T = *S;
-			break;
-		case 76: // RSUB
-			*PC = *L;
-			break;
-		case 164: // SHIFTL
-			*S = (*S)*2;
-			break;
-		case 168: // SHIFTR
-			*S = (*S)/2;
-			break;
-		case 12: // STA
-			addressM = *A;
-			break;
-		case 120: // STB
-			addressM = *B;
-			break;
-		case 84: // STCH
-			// both A and m as strings
-			memcpy( addressM, &A[5], 1 );
-			break;
-		case 20: // STL
-			addressM = *L;
-			break;
-		case 124: // STS
-			addressM = *S;
-			break;
-		case 132: // STT
-			addressM = *T;
-			break;
-		case 16: // STX
-			addressM = *X;
-			break;
-		case 28: // SUB
-			*A = *A - *addressM;
-			break;
-		case 148: // SUBR
-			*T = (*T) - (*S);
-			break;
-		case 44: // TIX
-			*X = (*X) + 1;
-			if(*X == addressM){
-				*SW = "equals";
-			}
-			else if(*X >= addressM){
-				*SW = "greater";
-			}
-			else{
-				*SW = "lesser";
-			}
-			break;
-		case 184: // TIXR
-			*X = (*X) + 1;
-			if(*X == *S){
-				*SW = "equals";
-			}
-			else if(*X >= *S){
-				*SW = "greater";
-			}
-			else{
-				*SW = "lesser";
-			}
-			break;
-		
-		default:
-			printf( "ERROR" );
-			break;
+	switch ( opcodeInt )
+	{
+	case 24: // ADD
+		break;
+	case 144: // ADDR
+		break;
+	case 64: // AND
+		break;
+	case 180: // CLEAR
+		break;
+	case 40: // COMP
+		break;
+	case 160: // COMPR
+		break;
+	case 36: // DIV
+		break;
+	case 156: // DIVR
+		break;
+	case 60: // J
+		break;
+	case 48: // JEQ
+		break;
+	case 52: // JGT
+		break;
+	case 56: // JLT
+		break;
+	case 72: // JSUB
+		break;
+	case 0: // LDA
+		break;
+	case 104: // LDB
+		break;
+	case 80: // LDCH
+		break;
+	case 8: // LDL
+		break;
+	case 108: // LDS
+		break;
+	case 116: // LDT
+		break;
+	case 4: // LDX
+		break;
+	case 32: // MUL
+		break;
+	case 152: // MULR
+		break;
+	case 68: // OR
+		break;
+	case 172: // RMO
+		break;
+	case 76: // RSUB
+		break;
+	case 164: // SHIFTL
+		break;
+	case 168: // SHIFTR
+		break;
+	case 12: // STA
+		break;
+	case 120: // STB
+		break;
+	case 84: // STCH
+		break;
+	case 20: // STL
+		break;
+	case 124: // STS
+		break;
+	case 132: // STT
+		break;
+	case 16: // STX
+		break;
+	case 28: // SUB
+		break;
+	case 148: // SUBR
+		break;
+	case 44: // TIX
+		break;
+	case 184: // TIXR
+		break;
+	
+	default:
+		printf( "ERROR" );
+		break;
 	}
 }
