@@ -67,11 +67,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 file = fopen(text, "r");
                 char line[256];
                 while (fgets(line, sizeof(line), file)) {
-
-                    //SendMessage(output_field, LB_INSERTSTRING, (WPARAM) line, (LPARAM) line);
-                    //SetWindowText(output_field, line);
-                    // concatenar cada item de linha com uma quebra de linha
-                    //strcat(line, "\n");
                     SendMessage(output_field, EM_REPLACESEL, 0, (LPARAM) line);
                 }
             }
