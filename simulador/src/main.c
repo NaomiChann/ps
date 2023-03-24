@@ -5,13 +5,20 @@
 #include <ctype.h>
 #include "kernighan.h"
 
+#define N 0
+#define I 1
+#define X 2
+#define B 3
+#define P 4
+#define E 5
+
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
 char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
-void AlolanExeggcutor( int iopcode , int * L, int * A, int * B, int * S, int * T, int * X,  int * PC,  char * SW,  int *addressM );
+void AlolanExeggcutor( int iopcode , int * regL, int * regA, int * regB, int * regS, int * regT, int * regX,  int * regPC,  char * regSW,  int *addressM );
 
 int globalMem;
 
@@ -24,7 +31,7 @@ int main()
 	bool flag[6];
 	
 	char temp[2], temp2[3];
-	int L, A, B, S, T, X, PC, SW;
+	int regL, regA, regB, regS, regT, regX, regPC, regSW;
 
 // if error reading file
 	if( !inputFile ) 
@@ -64,17 +71,17 @@ int main()
 
 				memcpy( temp, &objCode[2], 1 );
 				printf( "r1 %s ", temp ); // temp = r1
-				S = atoi( temp );
+				regS = atoi( temp );
 
 				memcpy( temp, &objCode[3], 1 );
 				printf( "r2 %s \n", temp ); // temp = r2
-				T = atoi( temp );
+				regT = atoi( temp );
 
 				InstructionTable( temp2 );
 				Memory( 2 );
 				break;
 			case 3:
-				flag[5] = false;
+				flag[E] = false;
 				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
 
@@ -91,7 +98,7 @@ int main()
 				Memory( 3 );
 				break;
 			case 4:
-				flag[5] = true;
+				flag[E] = true;
 				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
 
@@ -350,171 +357,171 @@ char * InstructionTable( const char *s )
 	return instructions; 
 }
 
-void AlolanExeggcutor( int iopcode , int * L, int * A, int * B, int * S, int * T, int * X,  int * PC,  char * SW,  int *addressM )
+void AlolanExeggcutor( int iopcode , int * regL, int * regA, int * regB, int * regS, int * regT, int * regX,  int * regPC,  char * regSW,  int *addressM )
 {
 	char *temp;
-	temp = *SW;
+	temp = *regSW;
 	switch ( iopcode )
 	{//r1   s     r2  t
 		case 24: // ADD
-			*A = *A + addressM;
+			*regA = *regA + addressM;
 			break;
 		case 144: // ADDR
-			*T = *T + *S;
+			*regT = *regT + *regS;
 			break;
 		case 64: // AND
-			*A = *A;
+			*regA = *regA;
 			break;
 		case 180: // CLEAR
-			*S = 0;
+			*regS = 0;
 			break;
 		case 40: // COMP
-			if(*A == addressM){
-				*SW = "equals";
+			if(*regA == addressM){
+				*regSW = "equals";
 			}
-			else if(*A >= addressM){
-				*SW = "greater";
+			else if(*regA >= addressM){
+				*regSW = "greater";
 			}
 			else{
-				*SW = "lesser";
+				*regSW = "lesser";
 			}
 			break;
 		case 160: // COMPR
-			if(*S == *T){
-				*SW = "equals";
+			if(*regS == *regT){
+				*regSW = "equals";
 			}
-			else if(*S >= *T){
-				*SW = "greater";
+			else if(*regS >= *regT){
+				*regSW = "greater";
 			}
 			else{
-				*SW = "lesser";
+				*regSW = "lesser";
 			}
 			break;
 		case 36: // DIV
-			*A = *A / *addressM;
+			*regA = *regA / *addressM;
 			break;
 		case 156: // DIVR
-			*T = *T / *S;
+			*regT = *regT / *regS;
 			break;
 		case 60: // J
-			*PC = addressM; 
+			*regPC = addressM; 
 			break;
 		case 48: // JEQ
 			if(strcmp(temp,"equals"))
 			{
-				*PC = addressM;
+				*regPC = addressM;
 			}
 			break;
 		case 52: // JGT
 			if(strcmp(temp,"greater"))
 			{
-				*PC = addressM;
+				*regPC = addressM;
 			}
 			break;
 		case 56: // JLT
 			if(strcmp(temp,"lesser"))
 			{
-				*PC = addressM;
+				*regPC = addressM;
 			}
 			break;
 		case 72: // JSUB
-			*L = *PC;
-			*PC = addressM; 
+			*regL = *regPC;
+			*regPC = addressM; 
 			break;
 		case 0: // LDA
-			*A = addressM;
+			*regA = addressM;
 			break;
 		case 104: // LDB
-			*B = addressM;
+			*regB = addressM;
 			break;
 		case 80: // LDCH
 			// m as hex into temp
-			// A to string of hex
-			memcpy( &A[5], temp, 1 );
+			// regA to string of hex
+			memcpy( &regA[5], temp, 1 );
 			break;
 		case 8: // LDL
-			*L = addressM;
+			*regL = addressM;
 			break;
 		case 108: // LDS
-			*S = addressM;
+			*regS = addressM;
 			break;
 		case 116: // LDT
-			*T = addressM;
+			*regT = addressM;
 			break;
 		case 4: // LDX
-			*X = addressM;
+			*regX = addressM;
 			break;
 		case 32: // MUL
-			*A = (*A) * *addressM;
+			*regA = (*regA) * *addressM;
 			break;
 		case 152: // MULR
-			*T = (*T) * (*S);
+			*regT = (*regT) * (*regS);
 			break;
 		case 68: // OR
-			*A = (*A) || addressM;
+			*regA = (*regA) || addressM;
 			break;
 		case 172: // RMO
-			*T = *S;
+			*regT = *regS;
 			break;
 		case 76: // RSUB
-			*PC = *L;
+			*regPC = *regL;
 			break;
 		case 164: // SHIFTL
-			*S = (*S)*2;
+			*regS = (*regS)*2;
 			break;
 		case 168: // SHIFTR
-			*S = (*S)/2;
+			*regS = (*regS)/2;
 			break;
 		case 12: // STA
-			addressM = *A;
+			addressM = *regA;
 			break;
 		case 120: // STB
-			addressM = *B;
+			addressM = *regB;
 			break;
 		case 84: // STCH
-			// both A and m as strings
-			memcpy( addressM, &A[5], 1 );
+			// both regA and m as strings
+			memcpy( addressM, &regA[5], 1 );
 			break;
 		case 20: // STL
-			addressM = *L;
+			addressM = *regL;
 			break;
 		case 124: // STS
-			addressM = *S;
+			addressM = *regS;
 			break;
 		case 132: // STT
-			addressM = *T;
+			addressM = *regT;
 			break;
 		case 16: // STX
-			addressM = *X;
+			addressM = *regX;
 			break;
 		case 28: // SUB
-			*A = *A - *addressM;
+			*regA = *regA - *addressM;
 			break;
 		case 148: // SUBR
-			*T = (*T) - (*S);
+			*regT = (*regT) - (*regS);
 			break;
 		case 44: // TIX
-			*X = (*X) + 1;
-			if(*X == addressM){
-				*SW = "equals";
+			*regX = (*regX) + 1;
+			if(*regX == addressM){
+				*regSW = "equals";
 			}
-			else if(*X >= addressM){
-				*SW = "greater";
+			else if(*regX >= addressM){
+				*regSW = "greater";
 			}
 			else{
-				*SW = "lesser";
+				*regSW = "lesser";
 			}
 			break;
 		case 184: // TIXR
-			*X = (*X) + 1;
-			if(*X == *S){
-				*SW = "equals";
+			*regX = (*regX) + 1;
+			if(*regX == *regS){
+				*regSW = "equals";
 			}
-			else if(*X >= *S){
-				*SW = "greater";
+			else if(*regX >= *regS){
+				*regSW = "greater";
 			}
 			else{
-				*SW = "lesser";
+				*regSW = "lesser";
 			}
 			break;
 		
