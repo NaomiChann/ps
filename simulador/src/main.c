@@ -5,21 +5,32 @@
 #include <ctype.h>
 #include "kernighan.h"
 
+#define N 0
+#define I 1
+#define X 2
+#define B 3
+#define P 4
+#define E 5
+
 char * IntToBinary( int n );
 int BinaryToInt( char * bin );
 char * IntToHex( int n );
 void Memory( int numBytes );
-char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits );
+char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
-void AlolanExeggcutor( int iopcode );
+void AlolanExeggcutor( int opcodeInt );
 
 int globalMem;
 
 int main()
 {
 	FILE *inputFile = fopen( "cod-obj.txt", "r" );
-	char objCode[9], temp[2], temp2[3], opcode[3], flags[7], lastBits[21];
-	int instSize, iopcode;
+	char objCode[9];
+	char opcode[3], flags[7], lastBits[6];
+	int instSize, opcodeInt;
+	bool flag[6];
+
+	char temp[2], temp2[3];
 
 // if error reading file
 	if( !inputFile ) 
@@ -66,19 +77,52 @@ int main()
 				Memory( 2 );
 				break;
 			case 3:
-				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
+				flag[E] = false;
+				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
+
+				for( int i = 0; i < 5; i++ )
+				{
+					memcpy( temp, &flags[i], 1 );
+					if ( strcmp( temp, "1" ) == 0 ) {
+						flag[i] = true;
+					} else {
+						flag[i] = false;
+					}
+				}
+
 				Memory( 3 );
 				break;
 			case 4:
-				strcpy( opcode, SixBitOp( objCode, &iopcode, flags, lastBits ) );
+				flag[E] = true;
+				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
+
+				for( int i = 0; i < 5; i++ )
+				{
+					memcpy( temp, &flags[i], 1 );
+					if ( strcmp( temp, "1" ) == 0 ) {
+						flag[i] = true;
+					} else {
+						flag[i] = false;
+					}
+				}
 				break;
 			default:
 				printf( "SIZE ERROR \n" );
 				break;
 		}
-		printf( "============= \n" );
+
+		for ( int i = 0; i < 6; i++ )
+		{
+			if ( ( instSize / 2 ) > 2 && flag[i] == true )
+			{
+				printf( "1" );
+			} else {
+				printf( "0" );
+			}
+		}
+		printf( "\n============= \n" );
 	}
 	printf( "Memory used: %d Bytes \n", globalMem );
 	fclose( inputFile );
@@ -194,12 +238,13 @@ Treats the object code for 3 and 4 byte formats
 extracting its instruction opcode and flags
 ===================
 */
-char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
+char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 {
 	static char opcode[3];
 	char holder[2] = "";
 	int decimal = 0;
 	memset( opcode, '\0', 3 );
+	memset( lastBits, '\0', 6 );
 	memset( flags, '\0', 7 );
 	for ( int i = 0; i < 3; i++ )
 	{
@@ -237,7 +282,7 @@ char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 				break;
 			case 2: // byte 3
 				strcat( flags, IntToBinary( decimalHex ) );
-				printf( "flags %s \n", flags );
+				//printf( "flags %s \n", flags );
 				break;
 			default:
 				break;
@@ -268,11 +313,9 @@ char * SixBitOp( char * obj, int * iopcode, char * flags, char * lastBits )
 		printf( "displacement %s \n", lastBits );
 	}
 
-	
-
-// changes iopcode through pointers so function
+// changes opcodeInt through pointers so function
 // can still return opcode's string
-	*iopcode = decimal;
+	*opcodeInt = decimal;
 	return opcode;
 }
 
@@ -310,9 +353,9 @@ char * InstructionTable( const char *s )
 	return instructions; 
 }
 
-void AlolanExeggcutor( int iopcode )
+void AlolanExeggcutor( int opcodeInt )
 {
-	switch ( iopcode )
+	switch ( opcodeInt )
 	{
 	case 24: // ADD
 		break;
