@@ -269,6 +269,7 @@ char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 	static char opcode[3];
 	char holder[2] = "";
 	int decimal = 0;
+	char temp[3] = "", sup[3] = "";
 	memset( opcode, '\0', 3 );
 	memset( lastBits, '\0', 6 );
 	memset( flags, '\0', 7 );
