@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-#include <ctype.h>
-#include "kernighan.h"
+#include "converters.h"
 
 #define N 0
 #define I 1
@@ -15,13 +13,9 @@
 #define EQUAL 1
 #define GREATER 2
 
-char * IntToBinaryByteString( int n );
-int BinaryByteStringToInt( char * bin );
-char * IntToHex( int n );
 char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits );
 char * InstructionTable( const char *s );
 void AlolanExeggcutor( int iopcode, int * regL, int * regA, int * regB, int * regS, int * regT, int * regX, int * regPC, char * regSW, int * addressM );
-int HexStringToDecimal( char * string, int size );
 int Addressing( int target, bool * flag , int regB,  int regX, int regPC );
 int SIC( char * flags, bool * flag, int regX, char * lastBits );
 
@@ -44,7 +38,6 @@ int main()
 			return EXIT_FAILURE;
 	}
 // reads until eof
-	printf( "\n============= \n" );
 	while ( 1 )
 	{
 		fscanf( inputFile, "%s", objCode );
@@ -59,11 +52,12 @@ int main()
 		printf( "%X | %s ", regPC, objCode );
 		regPC += instSize / 2;
 // if memory full
-		if ( regPC > 1024 )
+		if ( regPC > 1024 || regPC < 0 )
 		{
-			printf( "\n=!=!=!=!=!=!= \n\nOUT OF MEMORY \n\n=!=!=!=!=!=!= \n" );
+			printf( "\n=!=!=!=!=!=!= \n\nOUT OF BOUNDS \n\n=!=!=!=!=!=!= \n" );
 			return EXIT_FAILURE;
 		}
+
 // each pair of hex values is a byte
 		switch ( instSize / 2 )
 		{
@@ -93,7 +87,7 @@ int main()
 				flag[E] = false;
 				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
-				tempI = HexStringToDecimal( lastBits, 3 );
+				tempI = HexToDecimal( lastBits, 3 );
 
 				for( int i = 0; i < 5; i++ )
 				{
@@ -109,7 +103,7 @@ int main()
 				flag[E] = true;
 				strcpy( opcode, SixBitOp( objCode, &opcodeInt, flags, lastBits ) );
 				InstructionTable( opcode );
-				tempI = HexStringToDecimal( lastBits, 5 );
+				tempI = HexToDecimal( lastBits, 5 );
 
 				for( int i = 0; i < 5; i++ )
 				{
@@ -126,19 +120,19 @@ int main()
 				break;
 		}
 
-		printf( "nixbpe " );
-		for ( int i = 0; i < 6; i++ )
-		{
-			if ( ( instSize / 2 ) > 2 && flag[i] == true )
-			{
-				printf( "1" );
-			} else {
-				printf( "0" );
-			}
-		}
-
 		if ( ( ( instSize / 2 ) == 3  || ( instSize / 2 ) == 4 ) )
 		{
+			printf( "nixbpe " );
+			for ( int i = 0; i < 6; i++ )
+			{
+				if ( ( instSize / 2 ) > 2 && flag[i] == true )
+				{
+					printf( "1" );
+				} else {
+					printf( "0" );
+				}
+			}
+
 			if ( !flag[N] && !flag[I] ) //00
 			{
 				target = SIC( flags, flag, regX, lastBits );
@@ -163,7 +157,7 @@ int main()
 		}
 
 		AlolanExeggcutor( opcodeInt, &regL, &regA, &regB, &regS, &regT, &regX, &regPC, &regSW, &target );
-		printf( "\nnext address %X", target );
+		printf( "\nnext address %X", regPC );
 		
 		printf( "\n============= \n" );
 
@@ -172,88 +166,6 @@ int main()
 	fclose( inputFile );
 
 	return 0;
-}
-
-/*
-===================
-IntToBinaryByteString
--------------------
-Converts an integer into 4 bit binary code
-and returns it as a string 
-===================
-*/
-char * IntToBinaryByteString( int n )
-{
-	int bin[5], i;
-	static char string[5];
-	char temp[5] = "";
-	memset( string, '\0', 5 );
-
-	for( i = 0; n > 0; i++ )
-	{
-		bin[i] = n % 2;
-		n = n / 2;
-	}
-
-	for( i = i - 1; i >= 0; i-- )
-	{
-		itoaB( bin[i], temp, 10 );
-		strcat( string, temp );
-	}
-
-	strcpy( temp, "0" );
-
-// adds 0 to the left until it's a 4 character string
-	while ( ( int ) strlen( string ) < 4 )
-	{
-		strcat( temp, string );
-		strcpy( string, temp );
-		strcpy( temp, "0" );
-	}
-
-	return string;
-}
-
-/*
-===================
-BinaryByteStringToInt
--------------------
-Converts a 4 bit binary code string
-into an integer
-===================
-*/
-int BinaryByteStringToInt( char * bin )
-{
-	char string[4] = "", temp[2] = "";
-	strcpy( string, bin );
-	int i, n = 0, j = 1;
-	
-	for( i = 3; i >= 0; i-- )
-	{
-		memcpy( temp, &string[i], 1 );
-		if ( strcmp( temp, "1" ) == 0 ) {
-			n += j;
-		}
-		j = j * 2;
-	}
-
-	return n;
-}
-
-/*
-===================
-IntToHex
--------------------
-Converts an integer into a string
-containing the value as a hexadecimal
-===================
-*/
-char * IntToHex( int n )
-{
-	static char hex[4];
-	itoaB( n, hex, 16 );
-
-	return hex;
 }
 
 /*
@@ -267,35 +179,29 @@ extracting its instruction opcode and flags
 char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 {
 	static char opcode[3];
-	char holder[2] = "";
+	char holder[5];
 	int decimal = 0;
-	char temp[3] = "", sup[3] = "";
+	char temp[3], sup[3], op[5];
 	memset( opcode, '\0', 3 );
 	memset( lastBits, '\0', 6 );
 	memset( flags, '\0', 7 );
+	memset( temp, '\0', 3 );
+	memset( sup, '\0', 3 );
 	for ( int i = 0; i < 3; i++ )
 	{
-
-// individually translates each hex byte into a decimal integer
-		char op[5], holder2[5];
-		memcpy( holder, &obj[i], 1 );
-		int decimalHex = ( int ) strtol( holder, NULL, 16 );
-
-// treats each byte individually
 		switch ( i )
 		{
-			case 0: // byte 1
-				strcpy( opcode, IntToHex( BinaryByteStringToInt( IntToBinaryByteString( decimalHex ) ) ) );
+			case 0: // first 4
+				memcpy( opcode, &obj[i], 1 );
 				break;
-			case 1: // byte 2
-				char temp[3] = "", sup[3] = "";
-				strcpy( holder2, IntToBinaryByteString( decimalHex ) );
-				memcpy( temp, holder2, 2 );
+			case 1: // second 4
+				strcpy( holder, HexDigitToBinary4bit( &obj[i] ) );
+				memcpy( temp, holder, 2 );
 				strcpy( op, temp );
 // adds two bits 0 at the end for a total of 4 bits
 // and translates it back to hex
 				strcat( op, "00" );
-				strcat( opcode, IntToHex( BinaryByteStringToInt( op ) ) );
+				strcat( opcode, Binary4bitToHexDigit( op ) );
 
 // capitalizes any characters in the hex string
 				for ( int j = 0; j < 2; j++ )
@@ -305,10 +211,10 @@ char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 				strcpy( opcode, sup );
 				printf( "\nopcode %s \n", opcode );
 
-				memcpy( flags, &holder2[2], 2 );
+				memcpy( flags, &holder[2], 2 );
 				break;
 			case 2: // byte 3
-				strcat( flags, IntToBinaryByteString( decimalHex ) );
+				strcat( flags, HexDigitToBinary4bit( &obj[i] ) );
 				//printf( "flags %s \n", flags );
 				break;
 			default:
@@ -316,11 +222,10 @@ char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 		}
 	}
 
-	memcpy( lastBits, &obj[3], 3 );
+	strcpy( lastBits, &obj[3] );
 
-	if ( strlen( obj ) == 8 ) // 4 more bits
+	if ( strlen( obj ) == 8 )
 	{
-		strcat( lastBits, &obj[6] );
 		printf( "address %s \n", lastBits );
 	} else {
 		printf( "displacement %s \n", lastBits );
@@ -328,7 +233,7 @@ char * SixBitOp( char * obj, int * opcodeInt, char * flags, char * lastBits )
 
 // changes opcodeInt through pointers so function
 // can still return opcode's string for printing
-	*opcodeInt = HexStringToDecimal( opcode, 2 );;
+	*opcodeInt = HexToDecimal( opcode, 2 );;
 	return opcode;
 }
 
@@ -378,7 +283,7 @@ void AlolanExeggcutor( int iopcode, int * regL, int * regA, int * regB, int * re
 		switch ( iopcode ) // r1 S r2 T
 		{
 		case 24: // ADD
-			*regA = *regA + addressM;
+			*regA = *regA + *addressM;
 			break;
 		case 144: // ADDR
 			*regT = *regT + *regS;
@@ -390,24 +295,22 @@ void AlolanExeggcutor( int iopcode, int * regL, int * regA, int * regB, int * re
 			*regS = 0;
 			break;
 		case 40: // COMP
-			if(*regA == addressM){
+			if ( *regA == *addressM )
+			{
 				*regSW = EQUAL;
-			}
-			else if(*regA >= addressM){
+			} else if ( *regA >= *addressM ) {
 				*regSW = GREATER;
-			}
-			else{
+			} else {
 				*regSW = LESSER;
 			}
 			break;
 		case 160: // COMPR
-			if(*regS == *regT){
+			if ( *regS == *regT ) {
 				*regSW = EQUAL;
 			}
-			else if(*regS >= *regT){
+			else if ( *regS >= *regT ) {
 				*regSW = GREATER;
-			}
-			else{
+			} else {
 				*regSW = LESSER;
 			}
 			break;
@@ -421,37 +324,38 @@ void AlolanExeggcutor( int iopcode, int * regL, int * regA, int * regB, int * re
 			*regPC = *addressM; 
 			break;
 		case 48: // JEQ
-			if( regSW == EQUAL )
+			if ( regSW == EQUAL )
 			{
-				*regPC = addressM;
+				*regPC = *addressM;
 			}
 			break;
 		case 52: // JGT
-			if( regSW == GREATER )
+			if ( regSW == GREATER )
 			{
-				*regPC = addressM;
+				*regPC = *addressM;
 			}
 			break;
 		case 56: // JLT
-			if( regSW == LESSER )
+			if ( regSW == LESSER )
 			{
-				*regPC = addressM;
+				*regPC = *addressM;
 			}
 			break;
 		case 72: // JSUB
 			*regL = *regPC;
-			*regPC = addressM; 
+			*regPC = *addressM; 
 			break;
 		case 0: // LDA
-			*regA = addressM;
+			*regA = *addressM;
 			break;
 		case 104: // LDB
-			*regB = addressM;
+			*regB = *addressM;
 			break;
 		case 80: // LDCH
+			char temp[25];
 			// m as hex into temp
 			// regA to string of hex
-			memcpy( &regA[5], addressM, 1 );
+			// memcpy( &regA[5], *addressM, 1 );
 			break;
 		case 8: // LDL
 			*regL = addressM;
@@ -545,27 +449,6 @@ void AlolanExeggcutor( int iopcode, int * regL, int * regA, int * regB, int * re
 	}
 }
 
-int HexStringToDecimal( char * string, int size )
-{
-	int j = size - 1, decimal = 0;
-	char holder[2] = "";
-	for ( int i = 0; i < size; i++ )
-    {
-        memcpy( holder, &string[i], 1 );
-
-        if ( j == 0 )
-        {
-            decimal += ( int ) strtol( holder, NULL, 16 );
-        } else {
-            decimal = 16 * j * ( ( int ) strtol( holder, NULL, 16 ) );
-        }
-
-        j--;
-    }
-
-	return decimal;
-}
-
 int Addressing( int target, bool * flag , int regB,  int regX, int regPC )
 {
 	if ( flag[X] )
@@ -592,12 +475,14 @@ int SIC( char * flags, bool * flag, int regX, char * lastBits )
 	int target;
 	strcat( temp2, &flags[3] );
 	if ( flag[E] == true ) {
-		target = ( BinaryByteStringToInt( temp2 ) * 5 ) + HexStringToDecimal( lastBits, 5 );
+		target = ( BinaryToDecimal( temp2, 3 ) * 5 ) + HexToDecimal( lastBits, 5 );
 	} else {
-		target = ( BinaryByteStringToInt( temp2 ) * 3 ) + HexStringToDecimal( lastBits, 3 );
+		target = ( BinaryToDecimal( temp2, 3 ) * 3 ) + HexToDecimal( lastBits, 3 );
 	}
 	
 	if( flag[X] ){
 		target += regX;
 	}
+
+	return target;
 }
