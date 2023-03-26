@@ -1,45 +1,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include "kernighan.h"
 
-char* DecimalToBinary4bit( int n );
+char* DecimalToBinary( int n, int length );
 int BinaryToDecimal( char* bin, int length );
 char* DecimalToHex( int n );
 int HexToDecimal( char* hex, int length );
 char* HexDigitToBinary4bit( char* hex );
 char* Binary4bitToHexDigit( char* bin );
 char* Filler( char* string, int length );
+void StringToUpper( char* string );
 
 /*
 ===================
-DecimalToBinary4bit
+DecimalToBinary
 -------------------
 Converts an integer into 4 bit binary code
 ===================
 */
-char* DecimalToBinary4bit( int n )
+char* DecimalToBinary( int n, int length )
 {
-	int bin[5], i;
-	char temp[5];
-	static char string[5];
-	memset( string, '\0', 5 );
-
-	for ( i = 0; n > 0; i++ )
+	if ( length > 25 )
 	{
-		bin[i] = n % 2;
-		n = n / 2;
+		fputs( "\nSIZE TOO BIG \n", stderr );
+		return NULL;
 	}
 
-	for ( i = i - 1; i >= 0; i-- )
-	{
-		itoaB( bin[i], temp, 10 );
-		strcat( string, temp );
-	}
+	static char bin[25];
+	memset( bin, '\0', 25 );
+	itoaB( n, bin, 2 );
 
-	Filler( string, 4 );
+	Filler( bin, length );
 
-	return string;
+	return bin;
 }
 
 /*
@@ -81,6 +76,7 @@ char* DecimalToHex( int n )
 	static char hex[7];
 	memset( hex, '\0', 7 );
 	itoaB( n, hex, 16 );
+	StringToUpper( hex );
 
 	return hex;
 }
@@ -113,7 +109,7 @@ int HexToDecimal( char* hex, int length )
 
 char* HexDigitToBinary4bit( char* hex )
 {
-	return DecimalToBinary4bit( HexToDecimal( hex, 1 ) );
+	return DecimalToBinary( HexToDecimal( hex, 1 ), 4 );
 }
 
 char* Binary4bitToHexDigit( char* bin )
@@ -135,4 +131,21 @@ char* Filler( char* string, int length )
 
 	free( temp );
 	return string;
+}
+
+void StringToUpper( char* string )
+{
+	int length = strlen( string );
+	char* upper = ( char* ) malloc( ( sizeof( char ) * length ) + 1 );
+	memset( upper, '\0', ( length + 1 ) );
+
+	for ( int j = 0; j < length; j++ )
+	{ 
+		upper[j] = toupper( string[j] ); 
+	}
+
+	strcpy( string, upper );
+
+	free( upper );
+	return;
 }
