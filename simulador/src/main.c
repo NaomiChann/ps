@@ -55,6 +55,8 @@ int main()
 
 		memory[i].size = instSize;
 
+		char test[3];
+
 		if ( i > MEMORY_MAX_ADDRESS ) // out of memory
 		{
 			fputs( "\n=!=!=!=!=!=!= \n\nMEMORY FULL \n\n=!=!=!=!=!=!= \n", stderr );
@@ -75,7 +77,7 @@ int main()
 				break;
 
 			case 3:
-				char test[3] = { '\0' };
+				test[3] = '\0';
 				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
 				
 				if ( strcmp( test, "00" ) == 0 ) // standard sic
