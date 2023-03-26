@@ -20,6 +20,26 @@ typedef struct
 	int sw;
 } registers_t;
 
+enum flag_t
+{
+	F_N,
+	F_I,
+	F_X,
+	F_B,
+	F_P,
+	F_E
+};
+
+typedef struct
+{
+	int size;
+	int opCodeInt;
+	char objCode[9];
+	char opCode[3];
+	char lastBits[6];
+	bool flag[6];
+} mem_t;
+
 /*
 ===================
 InstructionTable
@@ -55,8 +75,13 @@ char* InstructionTable( const char* opCode )
 	return NULL;
 }
 
-void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM )
+void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* memory )
 {
+	if ( memory->flag[F_N] && !memory->flag[F_I] )
+	{
+		addressM = &( memory[*addressM].opCodeInt );
+	}
+	
 	switch ( opCodeInt ) // r1 S r2 T
 	{
 		case 24: // ADD
@@ -174,7 +199,7 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM )
 			break;
 
 		case 68: // OR
-			reg->a = ( reg->a ) || addressM;
+			reg->a = ( reg->a ) | *addressM;
 			break;
 
 		case 172: // RMO
@@ -202,13 +227,15 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM )
 			break;
 
 		case 84: // STCH
-			// both regA and m as strings
-			//char AString[6], MString;
-			//memcpy( addressM, &AString[5], 1 );
+			char rightByte[3] = { '\0' }, temp[7] = { '\0' };
+			strcpy( temp, DecimalToHex( reg->a ) );
+			Filler( temp, 6 );
+			memcpy( rightByte, &temp[4], 2 );
+			*addressM = HexToDecimal( rightByte, 2 );
 			break;
 
 		case 20: // STL
-			*addressM = reg->l;
+			memory[*addressM].opCodeInt = reg->l;
 			break;
 
 		case 124: // STS
@@ -254,8 +281,15 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM )
 			}
 			break;
 
-		case 255: // NON INSTRUCTION
-			// this is a variable label
+		case 224: // TD
+			// this is not implemented
+			printf( "\noh yeah it definitely works" );
+			break;
+
+		case 216: // RD
+			// this is not implemented
+			printf( "\noh yeah it definitely read that" );
+			reg->a = 4;
 			break;
 		
 		default:

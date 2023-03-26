@@ -1,19 +1,10 @@
-/*
-	3KB memory ( 2^10 sets of 24 bits )
-*/
-
 #include <stdbool.h>
 #include "execute.h"
 
-enum flag_t
-{
-	F_N,
-	F_I,
-	F_X,
-	F_B,
-	F_P,
-	F_E
-};
+	// 3KB memory ( 2^10 sets of 24 bits )
+#define MEMORY_MAX_ADDRESS 1024
+
+int current = 0;
 
 enum reg_t
 {
@@ -27,30 +18,19 @@ enum reg_t
 	R_SW
 };
 
-typedef struct
-{
-	int size;
-	int opCodeInt;
-	char objCode[9];
-	char opCode[3];
-	char lastBits[6];
-	bool flag[6];
-} mem_t;
-
-
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
-void Addressing( int* target, bool* flag , registers_t* reg );
+int Addressing( int* target, bool* flag , registers_t* reg );
 int SIC( char* flagString, bool* flag, int regX, char* lastBits );
-void SixBitAddressing( bool* flag, int* target, registers_t* reg );
+void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory );
 
 int main()
 {
 	registers_t reg = { 0 };
-	mem_t memory[1024] = { 0 };
+	mem_t memory[MEMORY_MAX_ADDRESS] = { 0 };
 
 	FILE* inputFile = fopen( "cod-obj.txt", "r" );
 
-	int instSize, target, i = 0;
+	int instSize, target;
 
 	char temp[2] = { '\0' };
 
@@ -64,6 +44,7 @@ int main()
 
 	while ( 1 ) // memory setting
 	{
+		static int i = 0;
 		fscanf( inputFile, "%s", memory[i].objCode );
 		if ( feof( inputFile ) )
 		{
@@ -75,15 +56,19 @@ int main()
 
 		memory[i].size = instSize;
 
-		/* if ( memory[i].loca > 1024 || memory[i].loca < 0 ) // pc out of memory range
+		if ( i > MEMORY_MAX_ADDRESS ) // out of memory
 		{
 			fputs( "\n=!=!=!=!=!=!= \n\nMEMORY FULL \n\n=!=!=!=!=!=!= \n", stderr );
 			return EXIT_FAILURE;
-		} */
+		}
 
 		switch ( instSize )
 		{
 			case 1: // there are no 1 byte instructions on our table
+				printf( "%d - L A B E L \n", i );
+				memcpy( memory[i].opCode, memory[i].objCode, 2 ); // fetches opcode
+				memory[i].opCodeInt = HexToDecimal( memory[i].opCode, 2 );
+				break;
 			case 2:
 				memcpy( memory[i].opCode, memory[i].objCode, 2 ); // fetches opcode
 				memory[i].opCodeInt = HexToDecimal( memory[i].opCode, 2 );
@@ -91,7 +76,7 @@ int main()
 
 			case 3:
 				char test[3] = { '\0' };
-				memcpy( test, HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) ), 2 );
+				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
 				if ( strcmp( test, "00" ) == 0 ) // checks ni flags
 				{
 					// standard SIC
@@ -114,24 +99,46 @@ int main()
 		}
 
 		i += instSize;
+		target = i;
 	}
-	printf( "Memory used: %d Bytes \n", i );
 	fclose( inputFile );
+	printf( "Memory used: %d Bytes \n", target );
 
 	reg.pc = 0;
 	
-	printf( "\n============= \n" );
+	
 
 	while ( 1 ) // actual executing
 	{
-		int current = reg.pc;
+		current = reg.pc;
 		instSize = memory[current].size;
 		reg.pc += instSize;
-
-		printf( "%X | %s \n%s \n", ( reg.pc - instSize ), memory[current].objCode, memory[current].opCode );
+		
+		printf( "\n============= \n" );
+		printf( "%X | %s \n%s ", ( reg.pc - instSize ), memory[current].objCode, memory[current].opCode );
+		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
+			printf( " END READING \n" );
+			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg.a, reg.x, reg.l, reg.b, reg.s, reg.t, reg.pc, reg.sw );
+			return EXIT_SUCCESS;
+		}
+		if ( memory[current].size < 1 || memory[current].size > 4 ) {
+			fputs( "\n=!=!=!=!=!=!= \n\nSEGMENTATION FAULT \n\n=!=!=!=!=!=!= \n", stderr );
+			return EXIT_FAILURE;
+		}
+		
 		if ( instSize > 2 )
 		{
 			printf( "%s \n", memory[current].lastBits );
+		}
+		
+		InstructionTable( memory[current].opCode );
+
+		if ( instSize > 2 )
+		{
+			for ( int i = 0; i < 6; i++ )
+			{
+				printf( "%d", ( int ) memory[current].flag[i] );
+			}
 		}
 		
 		switch ( instSize )
@@ -139,37 +146,36 @@ int main()
 			case 1:
 				target = reg.pc;
 				break;
-				
+
 			case 2:
 				memcpy( temp, &( memory[current].objCode[2] ), 1 ); // fetches r1
 				reg.s = atoi( temp );
+				printf( "r1 %d ", reg.s );
 
 				memcpy( temp, &( memory[current].objCode[3] ), 1 ); // fetches r2
 				reg.t = atoi( temp );
+				printf( "r2 %d", reg.t );
 
 				target = reg.pc;
 				break;
 
 			case 3:
 				target = HexToDecimal( memory[current].lastBits, 3 );
-				SixBitAddressing( memory[current].flag, &target, &reg );
+				SixBitAddressing( memory[current].flag, &target, &reg, memory[current].opCodeInt, memory );
 				break;
 
 			case 4:
 				target = HexToDecimal( memory[current].lastBits, 5 );
-				SixBitAddressing( memory[current].flag, &target, &reg );
+				SixBitAddressing( memory[current].flag, &target, &reg, memory[current].opCodeInt, memory );
 				break;
 
 			default:
 				break;
 
 		}
-		
-		InstructionTable( memory[current].opCode );
-		AlolanExeggcutor( memory[current].opCodeInt, &reg, &target );
-		printf( "============= \n" );
 	}
-	
+
+	printf( "============= \n" );
 
 	return 0;
 }
@@ -238,30 +244,34 @@ void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeI
 	return;
 }
 
-void SixBitAddressing( bool* flag, int* target, registers_t* reg )
+void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory )
 {
-	if( flag[F_N] && flag[F_I] ) //11
+	if ( flag[F_N] && flag[F_I] ) //11
 	{	
 		Addressing( target, flag, reg ); // address
+		AlolanExeggcutor( opCodeInt, reg, target, memory );
 		return;
 	}
 
-	if( flag[F_N] && !flag[F_I] ) //10
+	if ( flag[F_N] && !flag[F_I] ) //10
 	{
 		Addressing( target, flag, reg ); // pointer to address
+		AlolanExeggcutor( opCodeInt, reg, &memory[*target].opCodeInt, memory );
 		return;
 	}
 
-	if( !flag[F_N] && flag[F_I] ) //01
+	if ( !flag[F_N] && flag[F_I] ) //01
 	{
-		Addressing( target, flag, reg ); // value
+		int value;
+		value = Addressing( target, flag, reg ); // value
+		AlolanExeggcutor( opCodeInt, reg, &value, memory );
 		return;
 	}
 
 	return;
 }
 
-void Addressing( int* target, bool* flag , registers_t* reg )
+int Addressing( int* target, bool* flag , registers_t* reg )
 {
 	if ( flag[F_X] )
 	{
@@ -299,7 +309,7 @@ void Addressing( int* target, bool* flag , registers_t* reg )
 		*target += reg->pc;
 	}
 
-	return;
+	return *target;
 }
 
 int SIC( char* flagString, bool* flag, int regX, char* lastBits )
