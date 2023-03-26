@@ -77,10 +77,7 @@ char* InstructionTable( const char* opCode )
 
 void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* memory )
 {
-	if ( memory->flag[F_N] && !memory->flag[F_I] )
-	{
-		addressM = &( memory[*addressM].opCodeInt );
-	}
+	char rightByte[3] = { '\0' }, temp[7] = { '\0' };
 	
 	switch ( opCodeInt ) // r1 S r2 T
 	{
@@ -169,9 +166,10 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			break;
 
 		case 80: // LDCH
-			// m as hex into temp
-			// regA to string of hex
-			// memcpy( &regA[5], *addressM, 1 );
+			strcpy( temp, DecimalToHex( *addressM ) );
+			Filler( temp, 6 );
+			memcpy( rightByte, &temp[4], 2 );
+			reg->a = HexToDecimal( rightByte, 2 );
 			break;
 
 		case 8: // LDL
@@ -191,15 +189,15 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			break;
 
 		case 32: // MUL
-			reg->a = ( reg->a ) * *addressM;
+			reg->a = reg->a * *addressM;
 			break;
 
 		case 152: // MULR
-			reg->t = ( reg->t ) * ( reg->s );
+			reg->t = reg->t * reg->s;
 			break;
 
 		case 68: // OR
-			reg->a = ( reg->a ) | *addressM;
+			reg->a = reg->a | *addressM;
 			break;
 
 		case 172: // RMO
@@ -211,23 +209,28 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			break;
 
 		case 164: // SHIFTL
-			reg->s = ( reg->s ) * 2;
+			char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
+			int amount = ( reg->t + 1 );
+
+			strcpy( dummy2, DecimalToBinary( reg->s, 24 ) );
+			strcpy( dummy, &dummy2[amount] );
+			memcpy( dummy, dummy2, amount );
+			reg->s = BinaryToDecimal( dummy, 24 );
 			break;
 
 		case 168: // SHIFTR
-			reg->s = ( reg->s ) / 2;
+			reg->s = reg->s >> ( reg->t + 1 );
 			break;
 
 		case 12: // STA
-			*addressM = reg->a;
+			memory[*addressM].opCodeInt = reg->a;
 			break;
 
 		case 120: // STB
-			*addressM = reg->b;
+			memory[*addressM].opCodeInt = reg->b;
 			break;
 
 		case 84: // STCH
-			char rightByte[3] = { '\0' }, temp[7] = { '\0' };
 			strcpy( temp, DecimalToHex( reg->a ) );
 			Filler( temp, 6 );
 			memcpy( rightByte, &temp[4], 2 );
@@ -239,15 +242,15 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			break;
 
 		case 124: // STS
-			*addressM = reg->s;
+			memory[*addressM].opCodeInt = reg->s;
 			break;
 
 		case 132: // STT
-			*addressM = reg->t;
+			memory[*addressM].opCodeInt = reg->t;
 			break;
 
 		case 16: // STX
-			*addressM = reg->x;
+			memory[*addressM].opCodeInt = reg->x;
 			break;
 
 		case 28: // SUB
@@ -280,20 +283,9 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 				reg->sw = LESSER;
 			}
 			break;
-
-		case 224: // TD
-			// this is not implemented
-			printf( "\noh yeah it definitely works" );
-			break;
-
-		case 216: // RD
-			// this is not implemented
-			printf( "\noh yeah it definitely read that" );
-			reg->a = 4;
-			break;
 		
 		default:
-			fputs( "ERROR \n", stderr );
+			fputs( "\nNOT IMPLEMENTED ", stderr );
 			break;
 			
 	}

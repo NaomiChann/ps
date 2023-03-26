@@ -20,7 +20,6 @@ enum reg_t
 
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
 int Addressing( int* target, bool* flag , registers_t* reg );
-int SIC( char* flagString, bool* flag, int regX, char* lastBits );
 void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory );
 
 int main()
@@ -77,10 +76,30 @@ int main()
 			case 3:
 				char test[3] = { '\0' };
 				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
-				if ( strcmp( test, "00" ) == 0 ) // checks ni flags
+				
+				if ( strcmp( test, "00" ) == 0 ) // standard sic
 				{
-					// standard SIC
-					printf( "STANDARD \n" ); // nothing
+					// | opcode  | ni | x | address				|
+					// | xxxx xx | 00 | x | xxx xxxx xxxx xxxx 	|
+					char bin[25] = { '\0' }, holder[7] = { '\0' }, address[16] = { '\0' };
+
+					memory[i].flag[F_N] = false;
+					memory[i].flag[F_I] = false;
+					
+					strcpy( bin, DecimalToBinary( HexToDecimal( memory[i].objCode, 6 ) , 24 ) );
+					memcpy( holder, bin, 6 );
+					memory[i].opCodeInt = BinaryToDecimal( holder, 6 );
+					strcpy( memory[i].opCode, DecimalToHex( memory[i].opCodeInt ) );
+
+					if ( bin[8] == '0' )
+					{
+						memory[i].flag[F_X] = false;
+					} else {
+						memory[i].flag[F_X] = true;
+					}
+
+					strcpy( address, &bin[9] );
+					strcpy( memory[i].lastBits, Filler( DecimalToHex( BinaryToDecimal( address, 15 ) ), 4 ) );
 				} else {
 					memory[i].flag[F_E] = false;
 					SixBitOp( memory[i].objCode, memory[i].opCode, memory[i].flag, memory[i].lastBits, &( memory[i].opCodeInt ) );
@@ -161,6 +180,11 @@ int main()
 
 			case 3:
 				target = HexToDecimal( memory[current].lastBits, 3 );
+
+				if ( !memory[current].flag[F_N] && !memory[current].flag[F_I] ) // standard sic
+				{
+					target = HexToDecimal( memory[current].lastBits, 4 );
+				}
 				SixBitAddressing( memory[current].flag, &target, &reg, memory[current].opCodeInt, memory );
 				break;
 
@@ -268,6 +292,13 @@ void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt,
 		return;
 	}
 
+	if ( !flag[F_N] && !flag[F_I] ) //00
+	{
+		Addressing( target, flag, reg );
+		AlolanExeggcutor( opCodeInt, reg, target, memory );
+		return;
+	}
+
 	return;
 }
 
@@ -310,25 +341,5 @@ int Addressing( int* target, bool* flag , registers_t* reg )
 	}
 
 	return *target;
-}
-
-int SIC( char* flagString, bool* flag, int regX, char* lastBits )
-{
-	char temp2[4] = "0";
-	int target;
-	strcat( temp2, &flagString[3] );
-	if ( flag[F_E] == true )
-	{
-		target = ( BinaryToDecimal( temp2, 3 ) * 5 ) + HexToDecimal( lastBits, 5 );
-	} else {
-		target = ( BinaryToDecimal( temp2, 3 ) * 3 ) + HexToDecimal( lastBits, 3 );
-	}
-	
-	if( flag[F_X] )
-	{
-		target += regX;
-	}
-
-	return target;
 }
 

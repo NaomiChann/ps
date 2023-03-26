@@ -22,7 +22,7 @@ Converts an integer into 4 bit binary code
 */
 char* DecimalToBinary( int n, int length )
 {
-	if ( length > 25 )
+	if ( length > 24 )
 	{
 		fputs( "\nSIZE TOO BIG \n", stderr );
 		return NULL;
