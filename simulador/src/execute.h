@@ -71,10 +71,18 @@ char* InstructionTable( const char* opCode )
 		}
 	}
 	
-	fputs( "Instruction not found \n", stderr );
+	fputs( "INSTRUCTION NOR IMPLEMENTED \n", stderr );
 	return NULL;
 }
 
+/*
+===================
+AlolanExeggcutor
+-------------------
+Main executioner function, resovles every implemented
+instruction according to their definitions
+===================
+*/
 void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* memory )
 {
 	char rightByte[3] = { '\0' }, temp[7] = { '\0' };
@@ -212,6 +220,7 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
 			int amount = ( reg->t + 1 );
 
+	// circular shift
 			strcpy( dummy2, DecimalToBinary( reg->s, 24 ) );
 			strcpy( dummy, &dummy2[amount] );
 			memcpy( dummy, dummy2, amount );
@@ -284,7 +293,7 @@ void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* me
 			}
 			break;
 		
-		default:
+		default: // yeah
 			fputs( "\nNOT IMPLEMENTED ", stderr );
 			break;
 			

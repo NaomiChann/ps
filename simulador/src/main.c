@@ -41,7 +41,7 @@ int main()
 
 	printf( "\n============= \n" );
 
-	while ( 1 ) // memory setting
+	while ( 1 ) // memory mapping loop
 	{
 		static int i = 0;
 		fscanf( inputFile, "%s", memory[i].objCode );
@@ -68,6 +68,7 @@ int main()
 				memcpy( memory[i].opCode, memory[i].objCode, 2 ); // fetches opcode
 				memory[i].opCodeInt = HexToDecimal( memory[i].opCode, 2 );
 				break;
+
 			case 2:
 				memcpy( memory[i].opCode, memory[i].objCode, 2 ); // fetches opcode
 				memory[i].opCodeInt = HexToDecimal( memory[i].opCode, 2 );
@@ -100,7 +101,7 @@ int main()
 
 					strcpy( address, &bin[9] );
 					strcpy( memory[i].lastBits, Filler( DecimalToHex( BinaryToDecimal( address, 15 ) ), 4 ) );
-				} else {
+				} else { // regular format 3
 					memory[i].flag[F_E] = false;
 					SixBitOp( memory[i].objCode, memory[i].opCode, memory[i].flag, memory[i].lastBits, &( memory[i].opCodeInt ) );
 				}
@@ -125,9 +126,15 @@ int main()
 
 	reg.pc = 0;
 	
-	
 
-	while ( 1 ) // actual executing
+////////////////////////////
+
+//	DONE MEMORY MAPPING   //
+
+////////////////////////////
+
+
+	while ( 1 ) // main executiion loop
 	{
 		current = reg.pc;
 		instSize = memory[current].size;
@@ -145,6 +152,7 @@ int main()
 			return EXIT_FAILURE;
 		}
 		
+	// pretty formatting stuff, useless since there will be a gui
 		if ( instSize > 2 )
 		{
 			printf( "%s \n", memory[current].lastBits );
@@ -159,6 +167,7 @@ int main()
 				printf( "%d", ( int ) memory[current].flag[i] );
 			}
 		}
+		
 		
 		switch ( instSize )
 		{
@@ -210,6 +219,7 @@ SixBitOp
 -------------------
 Treats the object code for 3/4 formats
 extracting its instruction's opCode and flags
+as well as displacement/address
 ===================
 */
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt )
@@ -268,23 +278,31 @@ void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeI
 	return;
 }
 
+/*
+===================
+SixBitAddressing
+-------------------
+Divides 3/4 format execution
+into its proper addressing types
+===================
+*/
 void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory )
 {
-	if ( flag[F_N] && flag[F_I] ) //11
+	if ( flag[F_N] && flag[F_I] ) // ni 11
 	{	
 		Addressing( target, flag, reg ); // address
 		AlolanExeggcutor( opCodeInt, reg, target, memory );
 		return;
 	}
 
-	if ( flag[F_N] && !flag[F_I] ) //10
+	if ( flag[F_N] && !flag[F_I] ) // ni 10
 	{
 		Addressing( target, flag, reg ); // pointer to address
 		AlolanExeggcutor( opCodeInt, reg, &memory[*target].opCodeInt, memory );
 		return;
 	}
 
-	if ( !flag[F_N] && flag[F_I] ) //01
+	if ( !flag[F_N] && flag[F_I] ) // ni 01
 	{
 		int value;
 		value = Addressing( target, flag, reg ); // value
@@ -292,9 +310,9 @@ void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt,
 		return;
 	}
 
-	if ( !flag[F_N] && !flag[F_I] ) //00
+	if ( !flag[F_N] && !flag[F_I] ) // ni 00
 	{
-		Addressing( target, flag, reg );
+		Addressing( target, flag, reg ); // address
 		AlolanExeggcutor( opCodeInt, reg, target, memory );
 		return;
 	}
@@ -302,6 +320,16 @@ void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt,
 	return;
 }
 
+/*
+===================
+Addressing
+-------------------
+Adds the remaining flags displacement to
+3/4 format instructions
+includes program counter relative's
+2's complement
+===================
+*/
 int Addressing( int* target, bool* flag , registers_t* reg )
 {
 	if ( flag[F_X] )
