@@ -1,0 +1,30 @@
+.234567890123456789
+Loc   	        Source Statement		Object Code
+-----------------------------------------------------------
+                LAB2C    START   
+0000            LDA     ALPHA           002036
+0003            LDB     #10             69100
+0006            LDX     #0              01200
+0009            ADDR    A,B             (addr=90)
+000B            STA     SAVEW,X         (sta=0c -> pensei em fazer 003c-002d pro disp)
+000E            LDX     #1              05201
+0011            STA     SAVEW,X         (sta=0c -> pensei em fazer 003c-002d pro disp)
+        .Format 4
+0014            +SUB    #12             1D100012
+0018            LDX     #0              01200
+001B            LDCH    HEXCHAR
+001E            STA     INPUT
+0021    LOOP    LDCH    STRING,X
+0024            COMP    INPUT
+0027            JEQ     FOUND
+002A            STCH    OUTPUT,X
+002D            TIX     #5
+0030            JLT     LOOP
+0033    FOUND    J       OUT
+0036    ALPHA    WORD    2
+003C    SAVEW    RESW    2
+0042    HEXCHAR  BYTE    X'61'
+0043    INPUT    RESB    1
+0044    STRING   BYTE    C'String'
+0045    OUTPUT   RESB    5
+0049    OUT      END
