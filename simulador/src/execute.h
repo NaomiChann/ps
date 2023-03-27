@@ -8,18 +8,6 @@ enum controlCode_t
 	GREATER
 };
 
-typedef struct
-{
-	int a;
-	int x;
-	int l;
-	int b;
-	int s;
-	int t;
-	int pc;
-	int sw;
-} registers_t;
-
 enum flag_t
 {
 	F_N,
@@ -28,6 +16,18 @@ enum flag_t
 	F_B,
 	F_P,
 	F_E
+};
+
+enum reg_t
+{
+	R_A,
+	R_X,
+	R_L,
+	R_B,
+	R_S,
+	R_T,
+	R_PC = 8,
+	R_SW
 };
 
 typedef struct
@@ -39,6 +39,8 @@ typedef struct
 	char lastBits[6];
 	bool flag[6];
 } mem_t;
+
+extern int reg;
 
 /*
 ===================
@@ -83,213 +85,219 @@ Main executioner function, resovles every implemented
 instruction according to their definitions
 ===================
 */
-void AlolanExeggcutor( int opCodeInt, registers_t* reg, int* addressM, mem_t* memory )
+void AlolanExeggcutor( int opCodeInt, int* addressM, int* r, mem_t* memory )
 {
 	char rightByte[3] = { '\0' }, temp[7] = { '\0' };
+	char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
+	int amount, holdies[10];
+
+	if ( memory)
 	
 	switch ( opCodeInt ) // r1 S r2 T
 	{
 		case 24: // ADD
-			reg->a = reg->a + *addressM;
+			reg_g[R_A] = reg_g[R_A] + *addressM;
 			break;
 
 		case 144: // ADDR
-			reg->t = reg->t + reg->s;
+			reg_g[r[1]] = reg_g[r[1]] + reg_g[r[0]];
 			break;
 
 		case 64: // AND
-			reg->a = reg->a;
+			reg_g[R_A] = reg_g[R_A] & *addressM;
 			break;
 
 		case 180: // CLEAR
-			reg->s = 0;
+			reg_g[r[0]] = 0;
 			break;
 
 		case 40: // COMP
-			if ( reg->a == *addressM )
+			if ( reg_g[R_A] == *addressM )
 			{
-				reg->sw = EQUAL;
-			} else if ( reg->a >= *addressM ) {
-				reg->sw = GREATER;
+				reg_g[R_SW] = EQUAL;
+			} else if ( reg_g[R_A] >= *addressM ) {
+				reg_g[R_SW] = GREATER;
 			} else {
-				reg->sw = LESSER;
+				reg_g[R_SW] = LESSER;
 			}
 			break;
 
 		case 160: // COMPR
-			if ( reg->s == reg->t ) {
-				reg->sw = EQUAL;
+			if ( reg_g[r[0]] == reg_g[r[1]] ) {
+				reg_g[R_SW] = EQUAL;
 			}
-			else if ( reg->s >= reg->t ) {
-				reg->sw = GREATER;
+			else if ( reg_g[r[0]] >= reg_g[r[1]] ) {
+				reg_g[R_SW] = GREATER;
 			} else {
-				reg->sw = LESSER;
+				reg_g[R_SW] = LESSER;
 			}
 			break;
 
 		case 36: // DIV
-			reg->a = reg->a / *addressM;
+			reg_g[R_A] = reg_g[R_A] / *addressM;
 			break;
 
 		case 156: // DIVR
-			reg->t = reg->t / reg->s;
+			reg_g[r[1]] = reg_g[r[1]] / reg_g[r[0]];
 			break;
 
 		case 60: // J
-			reg->pc = *addressM; 
+			reg_g[R_PC] = *addressM; 
 			break;
 
 		case 48: // JEQ
-			if ( reg->sw == EQUAL )
+			if ( reg_g[R_SW] == EQUAL )
 			{
-				reg->pc = *addressM;
+				reg_g[R_PC] = *addressM;
 			}
 			break;
 
 		case 52: // JGT
-			if ( reg->sw == GREATER )
+			if ( reg_g[R_SW] == GREATER )
 			{
-				reg->pc = *addressM;
+				reg_g[R_PC] = *addressM;
 			}
 			break;
 
 		case 56: // JLT
-			if ( reg->sw == LESSER )
+			if ( reg_g[R_SW] == LESSER )
 			{
-				reg->pc = *addressM;
+				reg_g[R_PC] = *addressM;
 			}
 			break;
 
 		case 72: // JSUB
-			reg->l = reg->pc;
-			reg->pc = *addressM; 
+			reg_g[R_L] = reg_g[R_PC];
+			reg_g[R_PC] = *addressM; 
 			break;
 
 		case 0: // LDA
-			reg->a = *addressM;
+			reg_g[R_A] = *addressM;
 			break;
 
 		case 104: // LDB
-			reg->b = *addressM;
+			reg_g[R_B] = *addressM;
 			break;
 
 		case 80: // LDCH
 			strcpy( temp, DecimalToHex( *addressM ) );
 			Filler( temp, 6 );
 			memcpy( rightByte, &temp[4], 2 );
-			reg->a = HexToDecimal( rightByte, 2 );
+			reg_g[R_A] = HexToDecimal( rightByte, 2 );
 			break;
 
 		case 8: // LDL
-			reg->l = *addressM;
+			reg_g[R_L] = *addressM;
 			break;
 
 		case 108: // LDS
-			reg->s = *addressM;
+			reg_g[R_S] = *addressM;
 			break;
 
 		case 116: // LDT
-			reg->t = *addressM;
+			reg_g[R_T] = *addressM;
 			break;
 
 		case 4: // LDX
-			reg->x = *addressM;
+			reg_g[R_X] = *addressM;
 			break;
 
 		case 32: // MUL
-			reg->a = reg->a * *addressM;
+			reg_g[R_A] = reg_g[R_A] * *addressM;
 			break;
 
 		case 152: // MULR
-			reg->t = reg->t * reg->s;
+			reg_g[r[1]] = reg_g[r[1]] * reg_g[r[0]];
 			break;
 
 		case 68: // OR
-			reg->a = reg->a | *addressM;
+			reg_g[R_A] = reg_g[R_A] | *addressM;
 			break;
 
 		case 172: // RMO
-			reg->t = reg->s;
+			reg_g[r[1]] = reg_g[r[0]];
 			break;
 
 		case 76: // RSUB
-			reg->pc = reg->l;
+			reg_g[R_PC] = reg_g[R_L];
 			break;
 
 		case 164: // SHIFTL
-			char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
-			int amount = ( reg->t + 1 );
+			dummy[25] = '\0';
+			dummy2[25] = '\0';
+			amount = ( reg_g[r[1]] + 1 );
 
 	// circular shift
-			strcpy( dummy2, DecimalToBinary( reg->s, 24 ) );
+			strcpy( dummy2, DecimalToBinary( reg_g[r[0]], 24 ) );
 			strcpy( dummy, &dummy2[amount] );
 			memcpy( dummy, dummy2, amount );
-			reg->s = BinaryToDecimal( dummy, 24 );
+			reg_g[r[0]] = BinaryToDecimal( dummy, 24 );
 			break;
 
 		case 168: // SHIFTR
-			reg->s = reg->s >> ( reg->t + 1 );
+			reg_g[r[0]] = reg_g[r[0]] >> ( reg_g[r[1]] + 1 );
 			break;
 
 		case 12: // STA
-			memory[*addressM].opCodeInt = reg->a;
+			memory[*addressM].opCodeInt = reg_g[R_A];
 			break;
 
 		case 120: // STB
-			memory[*addressM].opCodeInt = reg->b;
+			memory[*addressM].opCodeInt = reg_g[R_B];
 			break;
 
 		case 84: // STCH
-			strcpy( temp, DecimalToHex( reg->a ) );
+			strcpy( temp, DecimalToHex( reg_g[R_A] ) );
 			Filler( temp, 6 );
 			memcpy( rightByte, &temp[4], 2 );
 			*addressM = HexToDecimal( rightByte, 2 );
 			break;
 
 		case 20: // STL
-			memory[*addressM].opCodeInt = reg->l;
+			memory[*addressM].opCodeInt = reg_g[R_L];
 			break;
 
 		case 124: // STS
-			memory[*addressM].opCodeInt = reg->s;
+			memory[*addressM].opCodeInt = reg_g[R_S];
 			break;
 
 		case 132: // STT
-			memory[*addressM].opCodeInt = reg->t;
+			memory[*addressM].opCodeInt = reg_g[R_T];
 			break;
 
 		case 16: // STX
-			memory[*addressM].opCodeInt = reg->x;
+			memory[*addressM].opCodeInt = reg_g[R_X];
 			break;
 
 		case 28: // SUB
-			reg->a = reg->a - *addressM;
+			reg_g[R_A] = reg_g[R_A] - *addressM;
 			break;
 
 		case 148: // SUBR
-			reg->t = ( reg->t ) - ( reg->s );
+			reg_g[r[1]] = reg_g[r[1]] - reg_g[r[0]];
 			break;
 
 		case 44: // TIX
-			reg->x = ( reg->x ) + 1;
-			if ( reg->x == *addressM )
+			reg_g[R_X] = reg_g[R_X] + 1;
+			if ( reg_g[R_X] == *addressM )
 			{
-				reg->sw = EQUAL;
-			} else if ( reg->x >= *addressM ) {
-				reg->sw = GREATER;
+				reg_g[R_SW] = EQUAL;
+			} else if ( reg_g[R_X] >= *addressM ) {
+				reg_g[R_SW] = GREATER;
 			} else {
-				reg->sw = LESSER;
+				reg_g[R_SW] = LESSER;
 			}
 			break;
 
 		case 184: // TIXR
-			reg->x = (reg->x) + 1;
-			if(reg->x == reg->s){
-				reg->sw = EQUAL;
-			} else if ( reg->x >= reg->s ) {
-				reg->sw = GREATER;
+			reg_g[R_X] = reg_g[R_X] + 1;
+			if( reg_g[R_X] == reg_g[r[0]] )
+			{
+				reg_g[R_SW] = EQUAL;
+			} else if ( reg_g[R_X] >= reg_g[r[0]] ) {
+				reg_g[R_SW] = GREATER;
 			} else {
-				reg->sw = LESSER;
+				reg_g[R_SW] = LESSER;
 			}
 			break;
 		

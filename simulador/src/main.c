@@ -4,32 +4,21 @@
 	// 3KB memory ( 2^10 sets of 24 bits )
 #define MEMORY_MAX_ADDRESS 1024
 
-int current = 0;
+int reg_g[10] = { '\0' };
 
-enum reg_t
-{
-	R_A,
-	R_X,
-	R_L,
-	R_B,
-	R_S,
-	R_T,
-	R_PC = 8,
-	R_SW
-};
+int current = 0; // oh
 
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
-int Addressing( int* target, bool* flag , registers_t* reg );
-void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory );
+int Addressing( int* target, bool* flag );
+void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory );
 
 int main()
 {
-	registers_t reg = { 0 };
 	mem_t memory[MEMORY_MAX_ADDRESS] = { 0 };
 
 	FILE* inputFile = fopen( "cod-obj.txt", "r" );
 
-	int instSize, target;
+	int instSize, target, helper[2] = { 0 };
 
 	char temp[2] = { '\0' };
 
@@ -55,6 +44,8 @@ int main()
 
 		memory[i].size = instSize;
 
+		char test[3] = { '\0' };
+
 		if ( i > MEMORY_MAX_ADDRESS ) // out of memory
 		{
 			fputs( "\n=!=!=!=!=!=!= \n\nMEMORY FULL \n\n=!=!=!=!=!=!= \n", stderr );
@@ -75,7 +66,7 @@ int main()
 				break;
 
 			case 3:
-				char test[3] = { '\0' };
+				memset( temp, '\0', 3 );
 				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
 				
 				if ( strcmp( test, "00" ) == 0 ) // standard sic
@@ -124,7 +115,7 @@ int main()
 	fclose( inputFile );
 	printf( "Memory used: %d Bytes \n", target );
 
-	reg.pc = 0;
+	reg_g[R_PC] = 0;
 	
 
 ////////////////////////////
@@ -136,15 +127,15 @@ int main()
 
 	while ( 1 ) // main executiion loop
 	{
-		current = reg.pc;
+		current = reg_g[R_PC];
 		instSize = memory[current].size;
-		reg.pc += instSize;
+		reg_g[R_PC] += instSize;
 		
 		printf( "\n============= \n" );
-		printf( "%X | %s \n%s ", ( reg.pc - instSize ), memory[current].objCode, memory[current].opCode );
+		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
 			printf( " END READING \n" );
-			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg.a, reg.x, reg.l, reg.b, reg.s, reg.t, reg.pc, reg.sw );
+			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
 			return EXIT_SUCCESS;
 		}
 		if ( memory[current].size < 1 || memory[current].size > 4 ) {
@@ -172,19 +163,20 @@ int main()
 		switch ( instSize )
 		{
 			case 1:
-				target = reg.pc;
+				target = reg_g[R_PC];
 				break;
 
 			case 2:
 				memcpy( temp, &( memory[current].objCode[2] ), 1 ); // fetches r1
-				reg.s = atoi( temp );
-				printf( "r1 %d ", reg.s );
+				helper[0] = atoi( temp );
+				printf( "r1 %d ", helper[0] );
 
 				memcpy( temp, &( memory[current].objCode[3] ), 1 ); // fetches r2
-				reg.t = atoi( temp );
-				printf( "r2 %d", reg.t );
+				helper[1] = atoi( temp );
+				printf( "r2 %d", helper[1] );
 
-				target = reg.pc;
+				target = reg_g[R_PC];
+				AlolanExeggcutor( memory[current].opCodeInt, NULL, helper, memory );
 				break;
 
 			case 3:
@@ -194,12 +186,12 @@ int main()
 				{
 					target = HexToDecimal( memory[current].lastBits, 4 );
 				}
-				SixBitAddressing( memory[current].flag, &target, &reg, memory[current].opCodeInt, memory );
+				SixBitAddressing( memory[current].flag, &target, memory[current].opCodeInt, helper, memory );
 				break;
 
 			case 4:
 				target = HexToDecimal( memory[current].lastBits, 5 );
-				SixBitAddressing( memory[current].flag, &target, &reg, memory[current].opCodeInt, memory );
+				SixBitAddressing( memory[current].flag, &target, memory[current].opCodeInt, helper, memory );
 				break;
 
 			default:
@@ -286,19 +278,19 @@ Divides 3/4 format execution
 into its proper addressing types
 ===================
 */
-void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt, mem_t* memory )
+void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory )
 {
 	if ( flag[F_N] && flag[F_I] ) // ni 11
 	{	
 		Addressing( target, flag, reg ); // address
-		AlolanExeggcutor( opCodeInt, reg, target, memory );
+		AlolanExeggcutor( opCodeInt, reg, target, helper, memory );
 		return;
 	}
 
 	if ( flag[F_N] && !flag[F_I] ) // ni 10
 	{
 		Addressing( target, flag, reg ); // pointer to address
-		AlolanExeggcutor( opCodeInt, reg, &memory[*target].opCodeInt, memory );
+		AlolanExeggcutor( opCodeInt, reg, &memory[*target].opCodeInt, helper, memory );
 		return;
 	}
 
@@ -306,14 +298,14 @@ void SixBitAddressing( bool* flag, int* target, registers_t* reg, int opCodeInt,
 	{
 		int value;
 		value = Addressing( target, flag, reg ); // value
-		AlolanExeggcutor( opCodeInt, reg, &value, memory );
+		AlolanExeggcutor( opCodeInt, reg, &value, helper, memory );
 		return;
 	}
 
 	if ( !flag[F_N] && !flag[F_I] ) // ni 00
 	{
 		Addressing( target, flag, reg ); // address
-		AlolanExeggcutor( opCodeInt, reg, target, memory );
+		AlolanExeggcutor( opCodeInt, reg, target, helper, memory );
 		return;
 	}
 
@@ -330,16 +322,16 @@ includes program counter relative's
 2's complement
 ===================
 */
-int Addressing( int* target, bool* flag , registers_t* reg )
+int Addressing( int* target, bool* flag )
 {
 	if ( flag[F_X] )
 	{
-		*target += reg->x;
+		*target += reg_g[R_X];
 	}
 
 	if ( flag[F_B] )
 	{
-		*target += reg->b;
+		*target += reg_g[R_B];
 	}
 
 	if ( flag[F_P] )
@@ -365,9 +357,8 @@ int Addressing( int* target, bool* flag , registers_t* reg )
 			*target = 0 - *target;
 		}
 
-		*target += reg->pc;
+		*target += reg_g[R_PC];
 	}
 
 	return *target;
 }
-
