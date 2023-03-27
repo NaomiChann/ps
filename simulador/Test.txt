@@ -8,7 +8,7 @@ Loc   	        Source Statement		Object Code
 0009             ADDR     A,B             9003
 000B             STA      SAVEW,X         0FA030
 000E             LDX      #1              052001
-0011             STA      SAVEW,X         0FA028
+0011             STA      SAVEW,X         0FA02A
         .Format 4
 0014             +SUB     #12             1D100012
 0018             LDX      #0              052000
@@ -19,9 +19,9 @@ Loc   	        Source Statement		Object Code
 0027             JEQ      FOUND           33E033
 002A             STCH     OUTPUT,X        54A01C
 002D             TIX      #5              2DA005
-0030             JLT      LOOP            3BA021
-0033    FOUND    J        OUT             273C4E
-0036    ALPHA    WORD     2
+0030             JLT      LOOP            3B2FEE
+0033    FOUND    J        OUT             3F2018
+0036    ALPHA    WORD     2               
 003E    SAVEW    RESW     2
 0046    HEXCHAR  BYTE     X'61'
 0047    INPUT    RESB     1
