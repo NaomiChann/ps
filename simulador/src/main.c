@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include "execute.h"
 
-	// 3KB memory ( 2^10 sets of 24 bits )
+// 3KB memory ( 2^10 sets of 24 bits )
 #define MEMORY_MAX_ADDRESS 1024
 
 int reg_g[10] = { '\0' };
@@ -66,7 +66,7 @@ int main()
 				break;
 
 			case 3:
-				memset( temp, '\0', 3 );
+				memset( temp, '\0', 2 );
 				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
 				
 				if ( strcmp( test, "00" ) == 0 ) // standard sic
@@ -282,30 +282,30 @@ void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_
 {
 	if ( flag[F_N] && flag[F_I] ) // ni 11
 	{	
-		Addressing( target, flag, reg ); // address
-		AlolanExeggcutor( opCodeInt, reg, target, helper, memory );
+		Addressing( target, flag ); // address
+		AlolanExeggcutor( opCodeInt, target, helper, memory );
 		return;
 	}
 
 	if ( flag[F_N] && !flag[F_I] ) // ni 10
 	{
-		Addressing( target, flag, reg ); // pointer to address
-		AlolanExeggcutor( opCodeInt, reg, &memory[*target].opCodeInt, helper, memory );
+		Addressing( target, flag ); // pointer to address
+		AlolanExeggcutor( opCodeInt, &memory[*target].opCodeInt, helper, memory );
 		return;
 	}
 
 	if ( !flag[F_N] && flag[F_I] ) // ni 01
 	{
 		int value;
-		value = Addressing( target, flag, reg ); // value
-		AlolanExeggcutor( opCodeInt, reg, &value, helper, memory );
+		value = Addressing( target, flag ); // value
+		AlolanExeggcutor( opCodeInt, &value, helper, memory );
 		return;
 	}
 
 	if ( !flag[F_N] && !flag[F_I] ) // ni 00
 	{
-		Addressing( target, flag, reg ); // address
-		AlolanExeggcutor( opCodeInt, reg, target, helper, memory );
+		Addressing( target, flag ); // address
+		AlolanExeggcutor( opCodeInt, target, helper, memory );
 		return;
 	}
 

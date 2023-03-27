@@ -40,7 +40,7 @@ typedef struct
 	bool flag[6];
 } mem_t;
 
-extern int reg;
+extern int reg_g[10];
 
 /*
 ===================
@@ -73,7 +73,7 @@ char* InstructionTable( const char* opCode )
 		}
 	}
 	
-	fputs( "INSTRUCTION NOR IMPLEMENTED \n", stderr );
+	fputs( "INSTRUCTION NOT IMPLEMENTED \n", stderr );
 	return NULL;
 }
 
