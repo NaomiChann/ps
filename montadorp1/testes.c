@@ -207,13 +207,13 @@ int Mounty()
 					
 					directive = true;
 					Directives( label, operation, operands );
-					printf( "LOCCCCCC %d \n\n",locC );
+					printf( "LOC %d \n\n",locC );
 				}
 			}
 			if( directive == false )
 			{
 				LocUpdate( operation ); //if it isn't a directive that i'm implementing
-				printf( "LOCCCCCC %d \n\n",locC );
+				printf( "LOC %d \n\n",locC );
 			}
 		
 		}
