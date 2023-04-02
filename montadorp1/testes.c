@@ -97,20 +97,20 @@ void Directives( char *label,char *directive, char* operands )
 {
 	FILE* file = fopen( "SymbolTable.txt", "a+" );	
 	FILE* output = fopen( "output.txt", "a+" );	
-	char line[256] = "";
+	char line[256];
 	bool hasHeader=false;
 	int tam =0;
 
 	if( file != NULL )
 	{
-        while( fgets(line, sizeof(line), file ))
+        while( fgets(line, sizeof( line ), file ) )
 		{
-            if ( strstr(line, "AXLBSTPC") != NULL )
+            if ( strstr( line, "AXLBSTPC" ) != NULL )
 			{ //searchs for header AXLBSTPC
-				hasHeader=true;
+				hasHeader = true;
 			}          
         }
-		if( hasHeader==false )
+		if( hasHeader == false )
 		{
 			fprintf( file, "%s\n", "AXLBSTPC" ); // adds it if not
 		}
@@ -122,14 +122,14 @@ void Directives( char *label,char *directive, char* operands )
 		}
 		else 
 		{
-			if( strcmp(directive, "RESW" ) == 0 )
+			if( strcmp( directive, "RESW" ) == 0 )
 			{
-				locC += 4*( atoi(operands) );
+				locC += 4*( atoi( operands ) );
 				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
 			}
-			else if( strcmp(directive, "RESB" ) == 0 )
+			else if( strcmp( directive, "RESB" ) == 0 )
 			{
-				locC += atoi(operands);
+				locC += atoi( operands );
 				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
 			}
 			else if( strcmp( directive, "WORD" ) == 0 )
@@ -137,13 +137,13 @@ void Directives( char *label,char *directive, char* operands )
 				locC += 4;
 				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
 			}
-			else if( strcmp(directive, "BYTE") == 0 )
+			else if( strcmp( directive, "BYTE" ) == 0 )
 			{
-				tam = strlen( operands )/2;
+				tam = strlen( operands ) / 2;
 				locC += ceil( tam );//round it up
 				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
 			}
-			else if( strcmp(directive, "END") == 0 )
+			else if( strcmp( directive, "END" ) == 0 )
 			{
 				fprintf( output, "TCHURAP" );
 				fprintf( output, "TCHURUM" );
@@ -168,13 +168,14 @@ int Mounty()
 		return EXIT_FAILURE;
 	}
 
-	while(fgets(line, sizeof(line), inputFile)){
+	while( fgets( line, sizeof( line ), inputFile )  )
+	{
 		directive = false;
 		if( isspace( line[0] ) )
 		{
 			//no label:
 
-			LeftStrip(line);
+			LeftStrip( line );
 			operation = strtok( line, "\t" );
 			operands = strtok( NULL, "\n" );
 			printf( "%s\n",operation );
@@ -218,7 +219,7 @@ int Mounty()
 		
 		}
 	}
-	fclose(inputFile);
+	fclose( inputFile );
 } 
 int main()
 {
