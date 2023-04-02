@@ -15,7 +15,7 @@ static int locC = 0;
 ===================
 LeftStrip
 -------------------
-Copies string to another without first tab,
+Copies string to another one without first tab,
 returns string without tab.
 ===================
 */
