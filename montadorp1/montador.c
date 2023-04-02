@@ -15,7 +15,7 @@ static int locC = 0;
 ===================
 LeftStrip
 -------------------
-Copies string to another one without first tab,
+Copies string to another without first tab,
 returns string without tab.
 ===================
 */
@@ -58,7 +58,7 @@ void LocUpdate( char * str ) //for instructions
 		strSize = strtok( NULL, "\n" );
 		size = atoi( strSize );
 
-		if( strcmp( str,instructionName ) ==0 )
+		if( strcmp( str,instructionName ) == 0 )
 		{
 			if( str[0] == '+' )
 			{
@@ -70,14 +70,10 @@ void LocUpdate( char * str ) //for instructions
 				if( size == 3 )
 				{
 					locC += 4;
-				}
-				else
-				{
+				}else{
 					printf( "ERROR INVALID INSTRUCTION" );
 				}
-			}
-			else
-			{
+			}else{
 				locC += size;
 			}
 		}
@@ -87,7 +83,38 @@ void LocUpdate( char * str ) //for instructions
 
 /*
 ===================
-LocUpdate
+ASCIItoHex
+-------------------
+translates ASCII to hex
+===================
+*/
+char * ASCIItoHex(char * ascii )
+{
+	FILE* inputFile = fopen( "ascii-table.txt", "r" );
+	char * asciiTable, ascii2[2], *hex, line[256];
+
+	ascii2[0] = *ascii;
+	ascii2[1] = '\0';
+
+	printf( "\nC:  %c    \n",*ascii );
+	while(fgets( line, sizeof( line ), inputFile ) )
+	{
+		asciiTable = strtok( line, " " );
+		strcpy( asciiTable + strlen( asciiTable ), "\0" );
+
+		hex =  strtok( NULL, " " );
+		if( strcmp( asciiTable,ascii2 ) == 0 )
+			{
+				return hex;
+			}
+	}
+	return ascii;
+}
+
+
+/*
+===================
+Directives
 -------------------
 Puts the label, name of directive, operands and 
 updated location counter in the Symbol table.
@@ -96,14 +123,15 @@ updated location counter in the Symbol table.
 void Directives( char *label,char *directive, char* operands )
 {
 	FILE* file = fopen( "SymbolTable.txt", "a+" );	
+	FILE* asciiT = fopen( "ascii-table.txt", "a+" );	
 	FILE* output = fopen( "output.txt", "a+" );	
-	char line[256];
-	bool hasHeader=false;
-	int tam =0;
+	char line[256] = { '\0' }, lineASCII[256] = { '\0' }, *XorC, *ASCII, *hexOperand, temp[3] = { '\0' };
+	bool hasHeader = false;
+	int tam = 0;
 
 	if( file != NULL )
 	{
-        while( fgets(line, sizeof( line ), file ) )
+        while( fgets( line, sizeof( line ), file ) )
 		{
             if ( strstr( line, "AXLBSTPC" ) != NULL )
 			{ //searchs for header AXLBSTPC
@@ -118,33 +146,70 @@ void Directives( char *label,char *directive, char* operands )
 		//resw resb word byte e equ
 		if( strcmp( directive, "EQU" ) == 0 )
 		{
-			fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
+			fprintf( file, "%s\t%s\n", label, operands );
 		}
 		else 
 		{
 			if( strcmp( directive, "RESW" ) == 0 )
 			{
 				locC += 4*( atoi( operands ) );
-				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
-			}
-			else if( strcmp( directive, "RESB" ) == 0 )
-			{
+				fprintf( file, "%s\t%s\n", label, operands );
+
+			} else if( strcmp( directive, "RESB" ) == 0 ){
 				locC += atoi( operands );
-				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
-			}
-			else if( strcmp( directive, "WORD" ) == 0 )
-			{
+				fprintf( file, "%s\t%s\n", label, operands );
+
+			} else if( strcmp( directive, "WORD" ) == 0 ){
 				locC += 4;
-				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
-			}
-			else if( strcmp( directive, "BYTE" ) == 0 )
-			{
+				fprintf( file, "%s\t%s\n", label, operands );
+
+			} else if( strcmp( directive, "BYTE" ) == 0 ){
+
+				if (strstr( operands, "X'" )  != NULL || strstr( operands, "C'" )  != NULL  ) //X' or C'
+				{
+					if ( strstr( operands, "X'" ) != NULL )
+					{
+						XorC = strtok( operands, "'" );
+						operands =  strtok( NULL, "'" );
+
+					} else if (strstr( operands, "C'" ) ) {
+
+						XorC = strtok( operands, "'" ); // C
+						operands =  strtok( NULL, "'" ); //example: EOF
+						//printf("%s", operands);
+
+						hexOperand = ( char * ) malloc ( ( ( strlen( operands ) * 2 ) + 1 ) * sizeof( char ) );
+						memset( hexOperand, '\0', ( ( strlen( operands ) * 2 ) + 1 ) );
+
+						char *token = strtok(operands, "");
+    
+						while (token != NULL) 
+						{
+							int i;
+							for ( i = 0; i < strlen( token ); i++ ) { //char by char
+								memcpy( temp, ASCIItoHex( &token[i] ), 2 );
+								strcat( hexOperand, temp );
+							}
+							token = strtok( NULL, "" );
+						}
+
+						strcpy( operands, hexOperand );
+						free( hexOperand );
+					}
+				}
+
+
+
 				tam = strlen( operands ) / 2;
-				locC += ceil( tam );//round it up
-				fprintf( file, "%d\t%s\t%s\t%s\n", locC, label, directive, operands );
-			}
-			else if( strcmp( directive, "END" ) == 0 )
-			{
+				if ( strlen( operands ) % 2 == 0 )
+				{
+					locC += tam;
+				} else {
+					locC += tam + 1;
+				}
+				fprintf( file, "%s\t%s\n", label, operands );
+
+			} else if( strcmp( directive, "END" ) == 0 ){
 				fprintf( output, "TCHURAP" );
 				fprintf( output, "TCHURUM" );
 				fprintf( output, "OUAAAAAA" );
@@ -156,6 +221,7 @@ void Directives( char *label,char *directive, char* operands )
     fclose( file );
 	fclose( output );
 }
+
 int Mounty()
 {
 	FILE* inputFile = fopen( "assembly.asm", "r" );
@@ -168,28 +234,31 @@ int Mounty()
 		return EXIT_FAILURE;
 	}
 
-	while( fgets( line, sizeof( line ), inputFile )  )
-	{
+	while(fgets( line, sizeof( line ), inputFile ) ){
 		directive = false;
 		if( isspace( line[0] ) )
 		{
 			//no label:
 
+			printf( "current LOC %d \n",locC );
 			LeftStrip( line );
 			operation = strtok( line, "\t" );
-			operands = strtok( NULL, "\n" );
+			operands = strtok( NULL, "\t" );
+
 			printf( "%s\n",operation );
 			printf( "%s\n",operands );
 			LocUpdate( operation );
-			printf( "LOC %d \n\n\n",locC );
+			printf( "\nLOC %d \n",locC );
 
 		}
 		else
 		{
 			//with label
+			printf( "current LOC %d \n",locC );
 			label = strtok( line, "\t" );
 			operation = strtok( NULL, "\t" );
-			operands = strtok( NULL, "\n" );
+			operands = strtok( NULL, "\t" );
+
 
 			if( strcmp( operation,"START" ) == 0 )
 			{
@@ -208,16 +277,17 @@ int Mounty()
 					
 					directive = true;
 					Directives( label, operation, operands );
-					printf( "LOC %d \n\n",locC );
+					printf( "\nLOC %d \n",locC );
 				}
 			}
 			if( directive == false )
 			{
 				LocUpdate( operation ); //if it isn't a directive that i'm implementing
-				printf( "LOC %d \n\n",locC );
+				printf( "\nLOC %d \n",locC );
 			}
 		
 		}
+		printf("\n\n");
 	}
 	fclose( inputFile );
 } 
