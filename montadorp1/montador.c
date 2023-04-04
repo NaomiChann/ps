@@ -96,11 +96,11 @@ char * ASCIItoHex(char * ascii )
 	ascii2[0] = *ascii;
 	ascii2[1] = '\0';
 
-	printf( "\nC:  %c    \n",*ascii );
+	printf("\nC:  %c    \n",*ascii);
 	while(fgets( line, sizeof( line ), inputFile ) )
 	{
 		asciiTable = strtok( line, " " );
-		strcpy( asciiTable + strlen( asciiTable ), "\0" );
+		strcpy(asciiTable + strlen(asciiTable), "\0");
 
 		hex =  strtok( NULL, " " );
 		if( strcmp( asciiTable,ascii2 ) == 0 )
@@ -183,14 +183,13 @@ void Directives( char *label,char *directive, char* operands )
 
 						char *token = strtok(operands, "");
     
-						while (token != NULL) 
-						{
+						while (token != NULL) {
 							int i;
-							for ( i = 0; i < strlen( token ); i++ ) { //char by char
-								memcpy( temp, ASCIItoHex( &token[i] ), 2 );
+							for (i = 0; i < strlen(token); i++) { //char by char
+								memcpy(temp, ASCIItoHex(&token[i]), 2);
 								strcat( hexOperand, temp );
 							}
-							token = strtok( NULL, "" );
+							token = strtok(NULL, "");
 						}
 
 						strcpy( operands, hexOperand );
@@ -222,19 +221,96 @@ void Directives( char *label,char *directive, char* operands )
 	fclose( output );
 }
 
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+
+/*
+===================
+LabelDuplicates
+-------------------
+Receives a vector of words (labels), and it's size,
+checks for dupicates, 1 for true, 0 for false.
+===================
+*/
+int LabelDuplicates() 
+{
+	FILE* inputFile = fopen( "SymbolTable.txt", "r" );
+	char line[256], **words = NULL, *label;
+	int numLabels = 0;
+
+	while(fgets( line, sizeof( line ), inputFile ) )
+	{
+		label = strtok( line, "\t" );
+
+		//vector of words
+		words = realloc( words, ( numLabels + 1 ) * sizeof( char * ) );
+		words[numLabels] = malloc( strlen( label ) + 1 );
+		strcpy( words[numLabels], label );
+
+		numLabels++;
+
+	}
+    for ( int i = 0; i < numLabels - 1; i++ ) 
+	{
+        for ( int j = i + 1; j < numLabels; j++ ) 
+		{
+            if ( strcmp(words[i], words[j]) == 0 ) 
+			{
+				printf( "\n=!=!=!=!=!=!=!=!=!=!=!=!= \n\n %s = %s \n",words[i], words[j] );
+                return 1;
+
+            }
+        }
+    }
+    return 0;
+}
+
+/*
+===================
+ClearFile
+-------------------
+Clear file in the beginning of each run since w
+mode deletes all of its contents if it exists.
+(truncates file)
+===================
+*/
+void clearFile( const char* filename ) 
+{
+    FILE* file = fopen( filename, "w" );
+    if ( file != NULL ) 
+	{
+        fclose( file );
+    }
+}
+
+
+/*
+===================
+Mounty
+-------------------
+Mounty
+===================
+*/
 int Mounty()
 {
 	FILE* inputFile = fopen( "assembly.asm", "r" );
 	char *label, *operation, *operands, line[256],  *diretrizes[] = {"RESW", "RESB", "BYTE", "WORD", "EQU", "END"};
 	bool directive = false; 
+	char **words = NULL;
+	int numLabels = 0;
 
+	clearFile("SymbolTable.txt");
+	//input file check
 	if( !inputFile )
 	{
 		fputs( "\n=!=!=!=!=!=!= \n\nINPUT FILE ERROR \n\n=!=!=!=!=!=!= \n\n", stderr );
 		return EXIT_FAILURE;
 	}
 
-	while(fgets( line, sizeof( line ), inputFile ) ){
+	while(fgets( line, sizeof( line ), inputFile ) )
+	{
 		directive = false;
 		if( isspace( line[0] ) )
 		{
@@ -288,8 +364,18 @@ int Mounty()
 		
 		}
 		printf("\n\n");
+
+
+        numLabels++;
 	}
+
 	fclose( inputFile );
+	if( LabelDuplicates() == 1 )
+	{
+		fputs( "\nDUPLICATE LABEL ERROR \n\n=!=!=!=!=!=!=!=!=!=!=!=!= \n\n", stderr );
+		return EXIT_FAILURE;
+	}
+
 } 
 int main()
 {
