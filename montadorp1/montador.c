@@ -383,3 +383,86 @@ int main()
 
     return 0;
 }
+
+/*
+===================
+opCode
+-------------------
+Translates the instruction to
+opcode 
+===================
+*/
+
+
+/*
+===================
+ReadFile
+-------------------
+Reads line by line the file
+===================
+*/
+
+void ReadFile (const char* filename)
+{
+	FILE* file = fopen( "SymbolTable.txt", "r" );
+	char line[100];
+	char operands[10];
+
+	if (fgets(line, 100, file) != NULL) 
+	{
+		locC =  HexToDecimal(line, strlen(line));
+    }
+
+	while (fgets(line, 100, file) != NULL) 
+	{
+		switch (operands) //fix switch
+		{
+			case 'EQU':
+				//locC = operands;
+				break;
+	
+			case 'ORG':
+				locC = operands;
+				break;
+	
+			case 'DS':
+				//espOperand = strlen(operands);
+				//saves in memory the size
+				//locC += espOperand
+				break;
+		
+			case 'DC':
+				//espOperand = strlen(operands);
+				//initialize the size in memory
+				//locC += espOperand
+				break;
+
+			case 'END':
+				locC = operands;
+				break;
+
+			default:
+				//generates machine code
+				//gets the instruction size dimension
+				//locC += espOperand
+				break;
+		}
+	}
+
+/*
+===================
+OutputTxt
+-------------------
+Output in txt with header,
+text, and.
+===================
+*/
+
+
+/*
+===================
+OutputObjCode
+-------------------
+Output for the object code.
+===================
+*/
