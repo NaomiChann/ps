@@ -13,11 +13,16 @@ char* Binary4bitToHexDigit( char* bin );
 char* Filler( char* string, int length );
 void StringToUpper( char* string );
 
+// todo: some of the length reciever functions
+// could just do a strlen check inside themselves
+
 /*
 ===================
 DecimalToBinary
 -------------------
-Converts an integer into 4 bit binary code
+Converts a decimal integer into binary
+recieves both the int and the desired length
+for the returned binary string
 ===================
 */
 char* DecimalToBinary( int n, int length )
@@ -41,8 +46,8 @@ char* DecimalToBinary( int n, int length )
 ===================
 BinaryToDecimal
 -------------------
-Converts a 4 bit binary code string
-into an integer
+Converts a binary code string into a decimal integer
+recieves both the binary string and its length
 ===================
 */
 int BinaryToDecimal( char* bin, int length )
@@ -67,8 +72,7 @@ int BinaryToDecimal( char* bin, int length )
 ===================
 DecimalToHex
 -------------------
-Converts a decimal into its
-hex equivalent, up to 6 bytes
+Converts a decimal integer into a hex string, up to 6 digits
 ===================
 */
 char* DecimalToHex( int n )
@@ -85,8 +89,8 @@ char* DecimalToHex( int n )
 ===================
 HexToDecimal
 -------------------
-Converts a hex string into its
-decimal equivalent from length
+Converts a hex string into a decimal integer
+recieves the hex string and its length
 ===================
 */
 int HexToDecimal( char* hex, int length )
@@ -107,17 +111,38 @@ int HexToDecimal( char* hex, int length )
 	return decimal;
 }
 
+/*
+===================
+HexDigitToBinary4bit
+-------------------
+Converts a hex digit into a 4 bit binary string
+===================
+*/
 char* HexDigitToBinary4bit( char* hex )
 {
 	return DecimalToBinary( HexToDecimal( hex, 1 ), 4 );
 }
 
+/*
+===================
+Binary4bitToHexDigit
+-------------------
+Converts a 4 bit binary string into a hex digit
+===================
+*/
 char* Binary4bitToHexDigit( char* bin )
 {
 	return DecimalToHex( BinaryToDecimal( bin, 4 ) );
 }
 
-// adds 0 to the left until it's a 4 character string
+/*
+===================
+Filler
+-------------------
+Fills the left side of a string with "0"
+until it's a 4 character string
+===================
+*/
 char* Filler( char* string, int length )
 {
 	char* temp = ( char* ) malloc( sizeof( char ) * ( length + 1 ) );
@@ -133,6 +158,13 @@ char* Filler( char* string, int length )
 	return string;
 }
 
+/*
+===================
+StringToUpper
+-------------------
+Changes all (applicable) characters in a string to uppercase
+===================
+*/
 void StringToUpper( char* string )
 {
 	int length = strlen( string );

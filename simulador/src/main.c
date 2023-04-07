@@ -4,24 +4,27 @@
 // 3KB memory ( 2^10 sets of 24 bits )
 #define MEMORY_MAX_ADDRESS 1024
 
+// globally accessible registers
 int reg_g[10] = { '\0' };
-
 int current = 0; // oh
+
+// prototypes
 
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
 int Addressing( int* target, bool* flag );
 void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory );
 
-int main()
+int main() // todo: needs something to recognize allocation
 {
 	mem_t memory[MEMORY_MAX_ADDRESS] = { 0 };
+	// loads the assembled file
+	FILE* inputFile = fopen( "..\\input\\assembled.txt", "r" );
 
-	FILE* inputFile = fopen( "cod-obj.txt", "r" );
-
-	int instSize, target, helper[2] = { 0 };
-
+	int instSize, startAdd, target, helper[2] = { 0 };
 	char temp[2] = { '\0' };
 
+
+	// returns error if file was not found
 	if( !inputFile )
 	{
 			fputs( "\n=!=!=!=!=!=!= \n\nINPUT FILE ERROR \n\n=!=!=!=!=!=!= \n\n", stderr );
@@ -29,22 +32,28 @@ int main()
 	}
 
 	printf( "\n============= \n" );
+	fscanf( inputFile, "%s", memory[0].objCode );
+	startAdd = HexToDecimal( memory[0].objCode, strlen( memory[0].objCode ) );
 
 	while ( 1 ) // memory mapping loop
 	{
 		static int i = 0;
+		char test[3] = { '\0' };
+		if ( i == 0 )
+		{
+			i = startAdd;
+		}
+
+		// reads the current object code
 		fscanf( inputFile, "%s", memory[i].objCode );
-		if ( feof( inputFile ) )
+		if ( feof( inputFile ) ) // ends while loop on eof
 		{
 			break;
 		}
 
-	// checks the string size to determine the instruction format
+		// checks the string size to determine the instruction format
 		instSize = ( ( int ) strlen( memory[i].objCode ) ) / 2;
-
 		memory[i].size = instSize;
-
-		char test[3] = { '\0' };
 
 		if ( i > MEMORY_MAX_ADDRESS ) // out of memory
 		{
@@ -66,23 +75,31 @@ int main()
 				break;
 
 			case 3:
-				memset( temp, '\0', 2 );
+				memset( temp, '\0', 2 ); // clears temp
+				// takes first byte from obj code, since these are all from opcode
 				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
 				
-				if ( strcmp( test, "00" ) == 0 ) // standard sic
+				if ( strcmp( test, "00" ) != 0 ) // regular format 3
 				{
+					memory[i].flag[F_E] = false; // flag e is guaranteed to be false
+					SixBitOp( memory[i].objCode, memory[i].opCode, memory[i].flag, memory[i].lastBits, &( memory[i].opCodeInt ) );
+				} else { // standard sic ( actually should never be assembled, but the executor is able to run it regardless )
 					// | opcode  | ni | x | address				|
 					// | xxxx xx | 00 | x | xxx xxxx xxxx xxxx 	|
-					char bin[25] = { '\0' }, holder[7] = { '\0' }, address[16] = { '\0' };
+					char bin[25] = { '\0' }, holder[9] = { '\0' }, address[16] = { '\0' };
 
+					// guaranteed flags
 					memory[i].flag[F_N] = false;
 					memory[i].flag[F_I] = false;
 					
+					// fully treats the obj code accoring to the standard sic format
 					strcpy( bin, DecimalToBinary( HexToDecimal( memory[i].objCode, 6 ) , 24 ) );
 					memcpy( holder, bin, 6 );
-					memory[i].opCodeInt = BinaryToDecimal( holder, 6 );
-					strcpy( memory[i].opCode, DecimalToHex( memory[i].opCodeInt ) );
+					strcat( holder, "00" );
+					memory[i].opCodeInt = BinaryToDecimal( holder, 8 );
+					strcpy( memory[i].opCode, Filler( DecimalToHex( memory[i].opCodeInt ), 2 ) );
 
+					// fetches flag x
 					if ( bin[8] == '0' )
 					{
 						memory[i].flag[F_X] = false;
@@ -90,16 +107,14 @@ int main()
 						memory[i].flag[F_X] = true;
 					}
 
+					// fetches address
 					strcpy( address, &bin[9] );
 					strcpy( memory[i].lastBits, Filler( DecimalToHex( BinaryToDecimal( address, 15 ) ), 4 ) );
-				} else { // regular format 3
-					memory[i].flag[F_E] = false;
-					SixBitOp( memory[i].objCode, memory[i].opCode, memory[i].flag, memory[i].lastBits, &( memory[i].opCodeInt ) );
 				}
 				break;
 
 			case 4:
-				memory[i].flag[F_E] = true;
+				memory[i].flag[F_E] = true; // flag e guaranteed to be true
 				SixBitOp( memory[i].objCode, memory[i].opCode, memory[i].flag, memory[i].lastBits, &( memory[i].opCodeInt ) );
 				break;
 
@@ -112,10 +127,13 @@ int main()
 		i += instSize;
 		target = i;
 	}
+
+
 	fclose( inputFile );
 	printf( "Memory used: %d Bytes \n", target );
 
-	reg_g[R_PC] = 0;
+	// sets pc to start addrest
+	reg_g[R_PC] = startAdd;
 	
 
 ////////////////////////////
@@ -127,23 +145,30 @@ int main()
 
 	while ( 1 ) // main executiion loop
 	{
-		current = reg_g[R_PC];
+		current = reg_g[R_PC]; // sets current line as pc
 		instSize = memory[current].size;
-		reg_g[R_PC] += instSize;
+		reg_g[R_PC] += instSize; // increments pc to next location
 		
 		printf( "\n============= \n" );
 		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
+
+
+		// checks for end reading keyword BABABABE
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
 			printf( " END READING \n" );
 			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
 			return EXIT_SUCCESS;
 		}
+
+		// used to work for checking any space out of the format sizes, will not work with allocated spaces
+		// probably some special checking for allocated spaces and rejecting anything other than "populated locations"
+		/*
 		if ( memory[current].size < 1 || memory[current].size > 4 ) {
 			fputs( "\n=!=!=!=!=!=!= \n\nSEGMENTATION FAULT \n\n=!=!=!=!=!=!= \n", stderr );
 			return EXIT_FAILURE;
 		}
+		*/
 		
-	// pretty formatting stuff, useless since there will be a gui
 		if ( instSize > 2 )
 		{
 			printf( "%s \n", memory[current].lastBits );
@@ -160,9 +185,10 @@ int main()
 		}
 		
 		
-		switch ( instSize )
+		switch ( instSize ) // format detection
 		{
 			case 1:
+				// works for now, will break with allocation
 				target = reg_g[R_PC];
 				break;
 
@@ -209,9 +235,10 @@ int main()
 ===================
 SixBitOp
 -------------------
-Treats the object code for 3/4 formats
+Treats the object code for 3/4 formats,
 extracting its instruction's opCode and flags
-as well as displacement/address
+as well as displacement/address through string
+manipulation and hexadecimal to binary conversion
 ===================
 */
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt )
@@ -219,30 +246,34 @@ void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeI
 	char op[5] = { '\0' }, flagString[7] = { '\0' };
 	char midBin[5] = { '\0' }, temp[3] = { '\0' };
 
+	// clears any leftovers from the strings
 	memset( opCode, '\0', 3 );
 	memset( lastBits, '\0', 6 );
 
-	for ( int i = 0; i < 3; i++ )
+	for ( int i = 0; i < 3; i++ ) // one loop for each hex digit
 	{
 		switch ( i )
 		{
-			case 0: // 1st-4th bits
+			case 0: // 1-4th bits
+				// first digit is entirely opcode
 				memcpy( opCode, &obj[i], 1 );
 				break;
 
-			case 1: // 5th-8th bits
+			case 1: // 5-8th bits
+				// first 2 bits from the second digit are opcode, then flag n and i
 				strcpy( midBin, HexDigitToBinary4bit( memcpy( temp, &obj[i], 1 ) ) );
 				memcpy( temp, midBin, 2 ); // first half to opcode
 				strcpy( op, temp );
-				strcat( op, "00" );
+				strcat( op, "00" ); // fills the right with zeros to complete a byte
 				strcat( opCode, Binary4bitToHexDigit( op ) ); // full opcode
 
-				*opCodeInt = HexToDecimal( opCode, 2 );
+				*opCodeInt = HexToDecimal( opCode, 2 ); // translation to decimal for easier use
 
 				memcpy( flagString, &midBin[2], 2 ); // second half to flags
 				break;
 
-			case 2: // 9th-12th bits
+			case 2: // 9-12th bits
+				// last digit is entirely flags
 				strcat( flagString, HexDigitToBinary4bit( &obj[i] ) ); // full flags
 				break;
 
@@ -274,8 +305,9 @@ void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeI
 ===================
 SixBitAddressing
 -------------------
-Divides 3/4 format execution
-into its proper addressing types
+Divides 3/4 format execution into its proper addressing types
+so that the proper target usage is sent to the execution
+( in most cases, jumps and stores recieve special treatment )
 ===================
 */
 void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory )
@@ -283,14 +315,14 @@ void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_
 	if ( flag[F_N] && flag[F_I] ) // ni 11
 	{	
 		Addressing( target, flag ); // address
-		AlolanExeggcutor( opCodeInt, target, helper, memory );
+		AlolanExeggcutor( opCodeInt, &memory[*target].opCodeInt, helper, memory );
 		return;
 	}
 
 	if ( flag[F_N] && !flag[F_I] ) // ni 10
 	{
 		Addressing( target, flag ); // pointer to address
-		AlolanExeggcutor( opCodeInt, &memory[*target].opCodeInt, helper, memory );
+		AlolanExeggcutor( opCodeInt, &memory[memory[*target].opCodeInt].opCodeInt, helper, memory );
 		return;
 	}
 
@@ -310,55 +342,4 @@ void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_
 	}
 
 	return;
-}
-
-/*
-===================
-Addressing
--------------------
-Adds the remaining flags displacement to
-3/4 format instructions
-includes program counter relative's
-2's complement
-===================
-*/
-int Addressing( int* target, bool* flag )
-{
-	if ( flag[F_X] )
-	{
-		*target += reg_g[R_X];
-	}
-
-	if ( flag[F_B] )
-	{
-		*target += reg_g[R_B];
-	}
-
-	if ( flag[F_P] )
-	{
-		char binTarget[13] = { '\0' }, temp[2] = { '\0' };
-
-		strcpy( binTarget, DecimalToBinary( *target, 12 ) );
-		memcpy( temp, &binTarget[0], 1 );
-
-		if ( strcmp( temp, "1" ) == 0 ) // check complement of 2
-		{
-			for ( int i = 1; i < 12; i++ )
-			{
-				if ( binTarget[i] == '1' )
-				{
-					binTarget[i] = '0';
-				} else {
-					binTarget[i] = '1';
-				}
-			}
-
-			*target = ( BinaryToDecimal( &binTarget[1], 11 ) ) + 1;
-			*target = 0 - *target;
-		}
-
-		*target += reg_g[R_PC];
-	}
-
-	return *target;
 }

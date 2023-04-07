@@ -1,9 +1,3 @@
-/*
-	
-* Ansi C "itoa" based on Kernighan & Ritchie's "Ansi C":
-	
-*/
-	
 void strreverse(char* begin, char* end) {
 	
 	char aux;
@@ -13,7 +7,12 @@ void strreverse(char* begin, char* end) {
 		aux=*end, *end--=*begin, *begin++=aux;
 	
 }
+
+/*
 	
+* Ansi C "itoa" based on Kernighan & Ritchie's "Ansi C"
+	
+*/
 void itoaB(int value, char* str, int base) {
 	
 	static char num[] = "0123456789abcdefghijklmnopqrstuvwxyz";
