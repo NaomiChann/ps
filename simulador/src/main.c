@@ -11,7 +11,6 @@ int current = 0; // oh
 // prototypes
 
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
-int Addressing( int* target, bool* flag );
 void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory );
 
 int main() // todo: needs something to recognize allocation
