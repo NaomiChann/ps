@@ -12,6 +12,7 @@ char* HexDigitToBinary4bit( char* hex );
 char* Binary4bitToHexDigit( char* bin );
 char* Filler( char* string, int length );
 void StringToUpper( char* string );
+void LeftStrip( char * s );
 
 // todo: some of the length reciever functions
 // could just do a strlen check inside themselves
@@ -100,13 +101,13 @@ int HexToDecimal( char* hex, int length )
 	memset( holder, '\0', 2 );
 
 	for ( int i = 0; i < length; i++ )
-    {
-        memcpy( holder, &hex[i], 1 );
+	{
+		memcpy( holder, &hex[i], 1 );
 
-        decimal += ( pow( 16, j ) ) * ( ( int ) strtol( holder, NULL, 16 ) );
+		decimal += ( pow( 16, j ) ) * ( ( int ) strtol( holder, NULL, 16 ) );
 
-        j--;
-    }
+		j--;
+	}
 
 	return decimal;
 }
@@ -180,4 +181,78 @@ void StringToUpper( char* string )
 
 	free( upper );
 	return;
+}
+
+
+/*
+===================
+LeftStrip
+-------------------
+Copies string to another without first tab,
+returns string without tab.
+===================
+*/
+void LeftStrip( char * s ) 
+{
+	char * p = s;
+	int l = strlen(p);
+
+	while( isspace( p[l - 1] ) )
+	{
+		p[--l] = 0;
+	}
+	while( * p && isspace(* p) )
+	{
+		++p, --l;
+	}
+	//strcat( p, "\n" );
+	memmove( s, p, l + 1 );
+}
+
+/*
+===================
+ClearFile
+-------------------
+Clear symboltable file in the beginning of each run since w
+mode deletes all of its contents if it exists.
+(truncates file)
+also sets all registers as labels so they can't be
+declared acagin in the symbol table
+===================
+*/
+void ClearFile( const char* filename ) 
+{
+	FILE* file = fopen( filename, "w" );
+	if ( file != NULL ) 
+	{
+		if ( strcmp( filename, "tables/symbol.txt" ) == 0 )
+		{
+		fprintf( file, "A\t0\nX\t1\nL\t2\nB\t3\nS\t4\nT\t5\nP\t8\nC\t9\n" );
+		}
+		fflush( file );
+		fclose( file );
+	}
+}
+
+char * ASCIItoHex(char * ascii )
+{
+	FILE* inputFile = fopen( "tables/ascii.txt", "r" );
+	char * asciiTable, ascii2[2], *hex, line[256];
+
+	ascii2[0] = *ascii;
+	ascii2[1] = '\0';
+
+	printf("%c",*ascii);
+	while(fgets( line, sizeof( line ), inputFile ) )
+	{
+		asciiTable = strtok( line, " " );
+		strcpy(asciiTable + strlen(asciiTable), "\0");
+
+		hex =  strtok( NULL, " " );
+		if( strcmp( asciiTable,ascii2 ) == 0 )
+			{
+				return hex;
+			}
+	}
+	return ascii;
 }

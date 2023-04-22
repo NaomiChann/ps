@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include "converters.h"
 
+// GLOBAL
+extern int reg_g[10];
+extern int current;
+
 enum controlCode_t
 {
 	LESSER,
@@ -40,9 +44,6 @@ typedef struct
 	bool flag[6];
 } mem_t;
 
-extern int reg_g[10];
-extern int current;
-
 /*
 ===================
 InstructionTable
@@ -54,7 +55,7 @@ and returns the name of the instruction
 char* InstructionTable( const char* opCode )
 // todo: insert behavior into the execution so there is no need to use a file
 {
-	FILE* table = fopen( "..\\input\\inst-table.txt", "r" );
+	FILE* table = fopen( "tables/instruction.txt", "r" );
 	static char instruction[7];
 	char line[10] = { '\0' }, temp[4] = { '\0' };
 
@@ -64,7 +65,6 @@ char* InstructionTable( const char* opCode )
 	{
 		if ( strstr( line, opCode ) )
 		{
-
 			strcat( temp, opCode );
 			memcpy( instruction, line, ( int ) strcspn( line, temp ) );
 
@@ -145,7 +145,8 @@ todo: check if it can recieve even less arguments since it already recieves the 
 {
 	char rightByte[3] = { '\0' }, temp[7] = { '\0' };
 	char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
-	int amount, holdies[10], valueHolder;
+	int amount, valueHolder;
+	//int holdies[10];
 
 	if ( opCodeInt == 12 || opCodeInt == 120 || opCodeInt == 84 || opCodeInt == 20 || opCodeInt == 124 || opCodeInt == 132 || opCodeInt == 16 )
 	{

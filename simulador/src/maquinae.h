@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "execute.h"
+#include "execution.h"
 
 // 3KB memory ( 2^10 sets of 24 bits )
 #define MEMORY_MAX_ADDRESS 1024
@@ -9,62 +9,51 @@ int reg_g[10] = { '\0' };
 int current = 0; // oh
 
 // prototypes
-
+void AmnesiaTreatment();
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
 void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory );
 
-int main() // todo: needs something to recognize allocation
-{
+/*
+===================
+AmnesiaTreatment
+-------------------
+Does memory mapping for the vm then
+manages it during the execution
+===================
+*/
+void AmnesiaTreatment()
+{ // todo: needs something to recognize allocation
 	mem_t memory[MEMORY_MAX_ADDRESS] = { 0 };
-	// loads the assembled file
-	FILE* inputFile = fopen( "..\\input\\assembled.txt", "r" );
+	FILE* fileInput = fopen( "program/assembled.txt", "r" );
 
 	int instSize, startAdd, target, helper[2] = { 0 };
-	char temp[2] = { '\0' };
+	char temp[2] = { '\0' }, holding[9] = { '\0' }, test[3] = { '\0' };
+	char line[256] = { '\0' };
 
+	fgets( line, sizeof( line ), fileInput );
+	strcpy( holding, strtok( line, "\n" ) );
+	startAdd = HexToDecimal( holding, 8 );
 
-	// returns error if file was not found
-	if( !inputFile )
-	{
-			fputs( "\n=!=!=!=!=!=!= \n\nINPUT FILE ERROR \n\n=!=!=!=!=!=!= \n\n", stderr );
-			return EXIT_FAILURE;
-	}
-
-	printf( "\n============= \n" );
-	fscanf( inputFile, "%s", memory[0].objCode );
-	startAdd = HexToDecimal( memory[0].objCode, strlen( memory[0].objCode ) );
-
-	while ( 1 ) // memory mapping loop
+	while ( fgets( line, sizeof( line ), fileInput ) )
 	{
 		static int i = 0;
-		char test[3] = { '\0' };
+
 		if ( i == 0 )
 		{
 			i = startAdd;
 		}
-
-		// reads the current object code
-		fscanf( inputFile, "%s", memory[i].objCode );
-		if ( feof( inputFile ) ) // ends while loop on eof
-		{
-			break;
-		}
+		
+		strcpy( holding, strtok( line, "\n" ) );
 
 		// checks the string size to determine the instruction format
-		instSize = ( ( int ) strlen( memory[i].objCode ) ) / 2;
+		instSize = strlen( holding ) / 2;
 		memory[i].size = instSize;
-
-		if ( i > MEMORY_MAX_ADDRESS ) // out of memory
-		{
-			fputs( "\n=!=!=!=!=!=!= \n\nMEMORY FULL \n\n=!=!=!=!=!=!= \n", stderr );
-			return EXIT_FAILURE;
-		}
+		strcpy( memory[i].objCode, holding );
 
 		switch ( instSize )
 		{
-			case 1: // there are no 1 byte instructions on our table
-				printf( "%d - L A B E L \n", i );
-				memcpy( memory[i].opCode, memory[i].objCode, 2 ); // fetches opcode
+			case 1: // there are no 1 byte instructions on our table yet
+				strcpy( memory[i].opCode, memory[i].objCode ); // fetches opcode
 				memory[i].opCodeInt = HexToDecimal( memory[i].opCode, 2 );
 				break;
 
@@ -124,12 +113,10 @@ int main() // todo: needs something to recognize allocation
 		}
 
 		i += instSize;
-		target = i;
 	}
 
 
-	fclose( inputFile );
-	printf( "Memory used: %d Bytes \n", target );
+	fclose( fileInput );
 
 	// sets pc to start addrest
 	reg_g[R_PC] = startAdd;
@@ -147,6 +134,11 @@ int main() // todo: needs something to recognize allocation
 		current = reg_g[R_PC]; // sets current line as pc
 		instSize = memory[current].size;
 		reg_g[R_PC] += instSize; // increments pc to next location
+		if ( instSize == 0 )
+		{
+			fputs( "\n=!=!=!=!=!=!= \n\nSEGMENTATION FAULT \n\n=!=!=!=!=!=!= \n\n" , stderr );
+			return;
+		}
 		
 		printf( "\n============= \n" );
 		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
@@ -155,8 +147,10 @@ int main() // todo: needs something to recognize allocation
 		// checks for end reading keyword BABABABE
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
 			printf( " END READING \n" );
-			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
-			return EXIT_SUCCESS;
+			FILE* fileOutput = fopen( "output/registers.txt", "w" );
+			fprintf( fileOutput, "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
+			fclose( fileOutput );
+			return;
 		}
 
 		// used to work for checking any space out of the format sizes, will not work with allocated spaces
@@ -227,7 +221,7 @@ int main() // todo: needs something to recognize allocation
 
 	printf( "============= \n" );
 
-	return 0;
+	return;
 }
 
 /*
