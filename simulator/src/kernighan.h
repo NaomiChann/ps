@@ -53,3 +53,43 @@ void itoaB(int value, char* str, int base) {
 	strreverse(str,wstr-1);
 	
 }
+
+void itoaAlpha(int value, char* str, int base) {
+	
+	static char num[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	
+	char* wstr=str;
+	
+	int sign;
+	
+
+
+	
+	// Validate base
+	
+	
+
+	
+	// Take care of sign
+	
+	if ((sign=value) < 0) value = -value;
+	
+
+
+	
+	// Conversion. Number is reversed.
+	
+	do *wstr++ = num[value%base]; while(value/=base);
+	
+	if(sign<0) *wstr++='-';
+	
+	*wstr='\0';
+	
+
+	
+	// Reverse string
+
+	
+	strreverse(str,wstr-1);
+	
+}

@@ -17,6 +17,7 @@ void CheckInstruction( line_t* programLine, char* op );
 bool FlagIntegrity( char* flags );
 void ValueYourself( line_t* programLine, char format );
 void TirapTchurum( int* target );
+bool Jumper( char* operation );
 
 /*
 ===================
@@ -31,6 +32,8 @@ void MountyTheEvilTwin()
 	FILE* fileOutput = fopen( "program/assembled.txt", "w" );
 	FILE* fileInput = fopen( "program/flagged.txt", "r" );
 	char line[256] = { '\0' }, opCodeF[13];
+
+	printf( "SECOND PASS. . .\n" );
 
 	while ( fgets( line, sizeof( line ), fileInput ) )
 	{
@@ -72,6 +75,9 @@ void MountyTheEvilTwin()
 
 	fclose( fileInput );
 	fclose( fileOutput );
+	
+	printf( "CONCLUDED\n\n" );
+	printf( "PROGRAM MOUNTED\n\n" );
 
 	AmnesiaTreatment();
 }
@@ -270,7 +276,7 @@ void ValueYourself( line_t* programLine, char format )
 	} else {
 		strcpy( operand1, value );
 	}
-
+// somewhere around here
 	memset( programLine->operand, '\0', strlen( programLine->operand ) );
 
 	while ( fgets( line, sizeof( line ), fileSymtab ) )
@@ -318,14 +324,17 @@ void ValueYourself( line_t* programLine, char format )
 			return;
 		}
 
-		if ( destLoc < currLoc )
+		if ( Jumper( programLine->operand ) )
 		{
-			programLine->flags[F_P] = '1';
-			currLoc -= destLoc + 1;
-			TirapTchurum( &currLoc );
-			strcat( programLine->operand, Filler( DecimalToHex( currLoc ), temp ) );
-			fclose( fileSymtab );
-			return;
+			if ( destLoc < currLoc )
+			{
+				programLine->flags[F_P] = '1';
+				currLoc -= destLoc + 1;
+				TirapTchurum( &currLoc );
+				strcat( programLine->operand, Filler( DecimalToHex( currLoc ), temp ) );
+				fclose( fileSymtab );
+				return;
+			}
 		}
 
 		strcat( programLine->operand, Filler( DecimalToHex( destLoc ), temp ) );
@@ -334,6 +343,16 @@ void ValueYourself( line_t* programLine, char format )
 	}
 
 	fclose( fileSymtab );
+}
+
+bool Jumper( char* operation )
+{
+	if ( strcmp( operation, "J" ) == 0 || strcmp( operation, "JEQ" ) == 0 || strcmp( operation, "JGT" ) == 0
+	|| strcmp( operation, "JLT" ) == 0 || strcmp( operation, "JSUB" ) == 0 )
+	{
+		return true;
+	}
+	return false;
 }
 
 /*

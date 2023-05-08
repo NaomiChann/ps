@@ -86,6 +86,25 @@ char* DecimalToHex( int n )
 	return hex;
 }
 
+char* DecimalToAlphanumeric( int n )
+{
+	static char an[3];
+	char* temp = ( char* ) malloc( sizeof( char ) * ( 2 + 1 ) );
+	memset( an, '\0', 3 );
+	itoaAlpha( n, an, 37 );
+
+	while ( ( int ) strlen( an ) < 2 )
+	{	
+		strcpy( temp, "A" );
+		strcat( temp, an );
+		strcpy( an, temp );
+	}
+
+	free( temp );
+
+	return an;
+}
+
 /*
 ===================
 HexToDecimal

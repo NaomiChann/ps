@@ -13,7 +13,7 @@ void DidYouComme( char* source );
 
 void Mounty()
 {
-	FILE* fileProgram = fopen( "program/assembly.asm", "r" );
+	FILE* fileProgram = fopen( "program/MASMAPRG.asm", "r" );
 
 	line_t programLine = { 0 };
 	char line[256] = { '\0' };
@@ -21,6 +21,9 @@ void Mounty()
 
 	ClearFile( "tables/symbol.txt" );
 	ClearFile( "program/flagged.txt" );
+
+	printf( "\nSTARTING ASSEMBLY\n" );
+	printf( "FIRST PASS. . .\n" );
 
 	while ( fgets( line, sizeof( line ), fileProgram ) )
 	{
@@ -63,6 +66,8 @@ void Mounty()
 	}
 
 	fclose( fileProgram );
+
+	printf( "CONCLUDED\n\n" );
 
 	MountyTheEvilTwin();
 }

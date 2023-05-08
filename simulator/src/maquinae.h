@@ -12,6 +12,7 @@ int current = 0; // oh
 void AmnesiaTreatment();
 void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeInt );
 void SixBitAddressing( bool* flag, int* target, int opCodeInt, int* helper, mem_t* memory );
+void RegUIgas();
 
 /*
 ===================
@@ -33,6 +34,8 @@ void AmnesiaTreatment()
 	fgets( line, sizeof( line ), fileInput );
 	strcpy( holding, strtok( line, "\n" ) );
 	startAdd = HexToDecimal( holding, 8 );
+
+	printf( "\nMEMORY MAPPING STARTED\n" );
 
 	while ( fgets( line, sizeof( line ), fileInput ) )
 	{
@@ -112,6 +115,13 @@ void AmnesiaTreatment()
 
 		}
 
+		for ( int j = 0; j < memory[i].size; ++j )
+		{
+			char out[3] = { '\0' };
+			memcpy( out, &memory[i].objCode[j * 2], 2 );
+			addDataGridItem( out );
+		}
+		
 		i += instSize;
 	}
 
@@ -121,16 +131,19 @@ void AmnesiaTreatment()
 	// sets pc to start addrest
 	reg_g[R_PC] = startAdd;
 	
+	printf( "CONCLUDED\n" );
 
 ////////////////////////////
 
 //	DONE MEMORY MAPPING   //
 
 ////////////////////////////
-
+	
+	printf( "\n\nSTARTING EXECUTION. . .\n" );
 
 	while ( 1 ) // main executiion loop
 	{
+		Sleep( posUI_g * 100 );
 		current = reg_g[R_PC]; // sets current line as pc
 		instSize = memory[current].size;
 		reg_g[R_PC] += instSize; // increments pc to next location
@@ -142,29 +155,13 @@ void AmnesiaTreatment()
 		
 		printf( "\n============= \n" );
 		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
-		/*
-		char guito[10] = { '\0' };
-		itoaB( reg_g[R_A], guito, 10 );
-		setACC( guito );
-		itoaB( reg_g[R_X], guito, 10 );
-		setRI( guito );
-		itoaB( reg_g[R_L], guito, 10 );
-		setMOP( guito );
-		itoaB( reg_g[R_B], guito, 10 );
-		setRE( guito );
-		itoaB( reg_g[R_PC], guito, 10 );
-		setPC( guito );
-		itoaB( reg_g[R_SW], guito, 10 );
-		setSP( guito );
-		*/
-
+		RegUIgas();
 
 		// checks for end reading keyword BABABABE
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
-			printf( " END READING \n" );
-			FILE* fileOutput = fopen( "output/registers.txt", "w" );
-			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
-			fclose( fileOutput );
+			printf( "END READING" );
+			printf( "\n============= \n\n" );
+			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n\n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
 			return;
 		}
 
@@ -237,6 +234,27 @@ void AmnesiaTreatment()
 	printf( "============= \n" );
 
 	return;
+}
+
+void RegUIgas()
+{
+	char guito[10] = { '\0' };
+	itoaB( reg_g[R_A], guito, 10 );
+	setACC( guito );
+	itoaB( reg_g[R_X], guito, 10 );
+	setRX( guito );
+	itoaB( reg_g[R_L], guito, 10 );
+	setRL( guito );
+	itoaB( reg_g[R_B], guito, 10 );
+	setRB( guito );
+	itoaB( reg_g[R_S], guito, 10 );
+	setRS( guito );
+	itoaB( reg_g[R_T], guito, 10 );
+	setRT( guito );
+	itoaB( reg_g[R_PC], guito, 10 );
+	setPC( guito );
+	itoaB( reg_g[R_SW], guito, 10 );
+	setSW( guito );
 }
 
 /*

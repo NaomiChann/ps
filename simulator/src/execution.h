@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "converters.h"
-//#include "hermes.h"
+#include "hermes.h"
 
 // GLOBAL
 extern int reg_g[10];
@@ -70,7 +70,7 @@ char* InstructionTable( const char* opCode )
 			memcpy( instruction, line, ( int ) strcspn( line, temp ) );
 
 			printf( "instruction %s \n", instruction );
-			//setCurrentInstruction( instruction );
+			setCurrentInstruction( instruction );
 
 			fclose( table );
 			return instruction; 
@@ -392,7 +392,13 @@ todo: check if it can recieve even less arguments since it already recieves the 
 			}
 			break;
 
-		// todo: WD
+		case 220: // WD
+			char out[16] = { '\0' };
+			itoaB( *value, out, 10 );
+			strcat( out, "\n" );
+			printf( "\n%s", out );
+			appendTextToOutput( out );
+			break;
 		
 		default: // yeah
 			fputs( "\nNOT IMPLEMENTED ", stderr );
