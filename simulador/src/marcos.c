@@ -13,10 +13,12 @@ int indexMacro_g = 0;
 int levelExpansion_g = 0;
 
 void Nanami( line_t process );
-void ExpandOmori( char* macro );
+void ExpandOmori( char* macro, char* argInput );
 void DelfinoPlaza();
 void GetItTogether();
 void RustRemover( char* removee );
+void Arganizer( int argCount, char argtab[32][8], char* argline );
+void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOriginal[32][8] );
 
 int main()
 {
@@ -75,7 +77,7 @@ void Nanami( line_t process )
 			strcat( guiout, ". . .\n" );
 			appendTextToOutput( guiout );
 			*/
-			ExpandOmori( namTab_g[i] );
+			ExpandOmori( namTab_g[i], process.operand );
 			expanding_g = false;
 			return;
 		}
@@ -100,11 +102,80 @@ void Nanami( line_t process )
 	}
 }
 
-void ExpandOmori( char* macro )
+void Arganizer( int argCount, char argtab[32][8], char* argline )
+{
+	for ( int i = 0; i < argCount; ++i )
+	{
+		if ( i == 0 && argCount != 1 )
+		{
+			strcpy( argtab[i], strtok( argline, ", " ) );
+			continue;
+		}
+		
+		if ( argCount == 1 )
+		{
+			strcpy( argtab[i], strtok( argline, " \0" ) );
+
+		} else if ( i == ( argCount - 1 ) ) {
+			strcpy( argtab[i], strtok( NULL, " \0" ) );
+
+		} else {
+			strcpy( argtab[i], strtok( NULL, ", " ) );
+		}
+	}
+}
+
+void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOriginal[32][8] )
+{
+	if ( exchangee != NULL )
+	{
+		for ( int i = 0; i < argCount; ++i )
+		{
+			if ( strstr( exchangee, "&" ) != NULL )
+			{
+				int tracker = strlen( exchangee );
+				char single[2] = { '\0' };
+				char* holder = ( char* ) malloc( sizeof( char ) * ( tracker + 1 ) );
+				char* replaced = ( char* ) malloc( sizeof( char ) * ( tracker + 1 ) );
+				memset( holder, '\0', ( tracker + 1 ) );
+				memset( replaced, '\0', ( tracker + 1 ) );
+
+				for ( int i = 0; i <= tracker; ++i )
+				{
+					if ( exchangee[i] == '&' )
+					{
+						memcpy( single, &exchangee[i + 1], 1 );
+						++i;
+					} else if ( exchangee[i] == ',' || exchangee[i] == '\0' ) {
+						for ( int j = 0; j < argCount; ++j )
+						{
+							if ( strcmp( holder, argtab[j] ) == 0 )
+							{
+								strcat( replaced, argOriginal[j] );
+								memset( holder, '\0', ( tracker + 1 ) );
+								memset( single, '\0', 1 );
+								++i;
+							}
+						}
+					} else {
+						memcpy( single, &exchangee[i], 1 );
+					}
+
+					strcat( holder, single );
+				}
+
+				strcpy( exchangee, replaced );
+
+				free( holder );
+			}
+		}
+	}
+}
+void ExpandOmori( char* macro, char* argInput )
 {
 	line_t expand = { 0 };
 	char lineExpand[256] = { '\0' }, dummy[256] = { '\0' };
-	char argtab[32][8] = { '\0' };
+	char argtab[32][8] = { '\0' }, argOriginal[32][8] = { '\0' };
 	int indexExpansion = 0, argCount = 0;
 
 	expanding_g = true;
@@ -141,28 +212,9 @@ void ExpandOmori( char* macro )
 	}
 
 	RustRemover( expand.operand );
-
-	for ( int i = 0; i < argCount; ++i )
-	{
-		if ( i == 0 && argCount != 1 )
-		{
-			strcpy( argtab[i], strtok( expand.operand, ", " ) );
-			continue;
-		}
-		
-		if ( argCount == 1 )
-		{
-			strcpy( argtab[i], strtok( expand.operand, " \0" ) );
-
-		} else if ( i == ( argCount - 1 ) ) {
-			strcpy( argtab[i], strtok( NULL, " \0" ) );
-
-		} else {
-			strcpy( argtab[i], strtok( NULL, ", " ) );
-		}
-	}
+	Arganizer( argCount, argtab, expand.operand );
+	Arganizer( argCount, argOriginal, argInput );
 	
-
 	strcpy( dummy, lineExpand );
 	Fetcher( dummy, &expand );
 
@@ -171,6 +223,8 @@ void ExpandOmori( char* macro )
 		++indexExpansion;
 		strcpy( dummy, lineExpand );
 		Fetcher( dummy, &expand );
+
+		Exchanger( expand.operand, argCount, argtab, argOriginal );
 
 		for ( int i = 0; i < indexMacro_g; ++i )
 		{
@@ -188,7 +242,7 @@ void ExpandOmori( char* macro )
 				strcat( guiout, ". . .\n" );
 				appendTextToOutput( guiout );
 				*/
-				ExpandOmori( namTab_g[i] );
+				ExpandOmori( namTab_g[i], expand.operand );
 				rewind( fileDeftab_g );
 				strcpy( dummy, lineExpand );
 
@@ -215,18 +269,7 @@ void ExpandOmori( char* macro )
 		{
 			if ( strstr( expand.operand, "&" ) != NULL )
 			{
-				char dummyCat[256] = { '\0' };
-				for ( int i = 0; i < argCount; ++i )
-				{
-					strcat( dummyCat, argtab[i] );
-					if ( i < ( argCount - 1 ) )
-					{
-						strcat( dummyCat, ", " );
-					}
-				}
-				printf( "%s\t%s\t%s\n", expand.label, expand.operation, dummyCat );
-				fprintf( fileOutput_g, "%s\t%s\t%s\n", expand.label, expand.operation, dummyCat );
-				continue;
+				Exchanger( expand.operand, argCount, argtab, argOriginal );
 			}
 			printf( "%s\t%s\t%s\n", expand.label, expand.operation, expand.operand );
 			fprintf( fileOutput_g, "%s\t%s\t%s\n", expand.label, expand.operation, expand.operand );
