@@ -3,6 +3,7 @@
 // GLOBAL
 const char* directives[] = { "BYTE", "WORD", "RESB", "RESW", "BASE", "NOBASE", "END", "START" };
 
+void Mounty();
 void Fetcher( char* line, line_t* programLine );
 bool LabelDuplicates( char* label, int loc );
 int LocUpdate( line_t* programLine );
@@ -10,7 +11,7 @@ int IWontByte( line_t* programLine );
 void Printy( line_t* programLine, int length );
 void DidYouComme( char* source );
 
-int main()
+void Mounty()
 {
 	FILE* fileProgram = fopen( "program/assembly.asm", "r" );
 
@@ -37,7 +38,7 @@ int main()
 			// has duplicate label
 			fputs( "\n=!=!=!=!=!=!= \n\nDUPLICATE LABEL \n\n=!=!=!=!=!=!= \n\n", stderr );
 			fclose( fileProgram );
-			return EXIT_FAILURE;
+			return;
 		}
 
 		operandInt = atoi( programLine.operand );
@@ -46,10 +47,7 @@ int main()
 		{
 			Printy( &programLine, length );
 			break;
-		}
-
-		if ( strcmp( programLine.operation, "START" ) == 0 )
-		{
+		} else if ( strcmp( programLine.operation, "START" ) == 0 ) {
 			Printy( &programLine, length );
 			startAddr = operandInt;
 			locC = startAddr;
@@ -67,7 +65,6 @@ int main()
 	fclose( fileProgram );
 
 	MountyTheEvilTwin();
-	return 0;
 }
 
 /*
@@ -323,6 +320,13 @@ void Printy( line_t* programLine, int length )
 			flags[F_N] = false;
 			flags[F_I] = true;
 			programLine->operand = &(programLine->operand[1]);
+		} else if ( programLine->operand[0] == '*' ) { // relative
+			flags[F_N] = false;
+			flags[F_I] = true;
+			programLine->operand = &(programLine->operand[1]);
+			int holder = atoi( programLine->operand );
+			holder = holder + programLine->loc;
+			itoaB( holder, programLine->operand, 10 );
 		} else { // simple
 			flags[F_N] = true;
 			flags[F_I] = true;

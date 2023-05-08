@@ -3,7 +3,7 @@
 // GLOBAL
 extern const char* directives[];
 
-typedef struct
+typedef struct l
 {
 	char label[8];
 	char* operation;
@@ -138,8 +138,6 @@ void FetcherTheEvilTwink( char* line, line_t* programLine )
 			break;
 		}
 	}
-
-
 }
 
 /*
@@ -156,7 +154,7 @@ void CheckInstruction( line_t* programLine, char* op )
 	char* instruction, * opCode, * format, lineInst[256] = { '\0' };
 	char holder[7] = { '\0' };
 
-	while( fgets( lineInst, sizeof( lineInst ), fileInstruction ) )
+	while ( fgets( lineInst, sizeof( lineInst ), fileInstruction ) )
 	{
 		instruction = strtok( lineInst, " " );
 		opCode = strtok( NULL, " " );
@@ -203,7 +201,7 @@ void CheckInstruction( line_t* programLine, char* op )
 		strcat( op, programLine->flags );
 	}
 
-	strcpy( holder, DecimalToHex( BinaryToDecimal( op, atoi( format ) * 4 ) ) );
+	strcpy( holder, Filler( DecimalToHex( BinaryToDecimal( op, atoi( format ) * 4 ) ), atoi( format ) ) );
 	programLine->operation = holder;
 
 	fclose( fileInstruction );

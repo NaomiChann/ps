@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "converters.h"
+//#include "hermes.h"
 
 // GLOBAL
 extern int reg_g[10];
@@ -69,6 +70,7 @@ char* InstructionTable( const char* opCode )
 			memcpy( instruction, line, ( int ) strcspn( line, temp ) );
 
 			printf( "instruction %s \n", instruction );
+			//setCurrentInstruction( instruction );
 
 			fclose( table );
 			return instruction; 

@@ -142,13 +142,28 @@ void AmnesiaTreatment()
 		
 		printf( "\n============= \n" );
 		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
+		/*
+		char guito[10] = { '\0' };
+		itoaB( reg_g[R_A], guito, 10 );
+		setACC( guito );
+		itoaB( reg_g[R_X], guito, 10 );
+		setRI( guito );
+		itoaB( reg_g[R_L], guito, 10 );
+		setMOP( guito );
+		itoaB( reg_g[R_B], guito, 10 );
+		setRE( guito );
+		itoaB( reg_g[R_PC], guito, 10 );
+		setPC( guito );
+		itoaB( reg_g[R_SW], guito, 10 );
+		setSP( guito );
+		*/
 
 
 		// checks for end reading keyword BABABABE
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
 			printf( " END READING \n" );
 			FILE* fileOutput = fopen( "output/registers.txt", "w" );
-			fprintf( fileOutput, "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
+			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
 			fclose( fileOutput );
 			return;
 		}
