@@ -24,7 +24,6 @@ void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOrigi
 int main()
 {
 	printf( "\nINITIALIZING. . .\n" );
-	ClearFile( "tables/name.txt" );
 	ClearFile( "tables/definition.txt" );
 
 	fileInput_g = fopen( "program/input.asm", "r" );
