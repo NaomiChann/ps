@@ -4,7 +4,7 @@
 
 // GLOBAL
 extern int reg_g[10];
-extern int current;
+extern int current_g;
 
 enum controlCode_t
 {
@@ -70,7 +70,6 @@ char* InstructionTable( const char* opCode )
 			strcpy( instruction, strtok( line, " " ) );
 
 			printf( "%s \n", instruction );
-			//setCurrentInstruction( instruction );
 
 			fclose( table );
 			return instruction; 
@@ -139,27 +138,21 @@ instruction according to their definitions
 ===================
 */
 void AlolanExeggcutor( int opCodeInt, int* value, int* r, mem_t* memory )
-/*
-todo: check if it can recieve even less arguments since it already recieves the memory
-	make it all less convoluted and with less repetition
-	implement WD
-*/
 {
 	char rightByte[3] = { '\0' }, temp[7] = { '\0' };
 	char dummy[25] = { '\0' }, dummy2[25] = { '\0' };
 	int amount, valueHolder;
-	//int holdies[10];
 
 	if ( opCodeInt == 12 || opCodeInt == 120 || opCodeInt == 84 || opCodeInt == 20 || opCodeInt == 124 || opCodeInt == 132 || opCodeInt == 16 )
 	{
 		valueHolder = *value;
-		if ( memory[current].size == 3 )
+		if ( memory[current_g].size == 3 )
 		{
-			valueHolder = HexToDecimal( memory[current].lastBits, 3 );
+			valueHolder = HexToDecimal( memory[current_g].lastBits, 3 );
 		} else {
-			valueHolder = HexToDecimal( memory[current].lastBits, 5 );
+			valueHolder = HexToDecimal( memory[current_g].lastBits, 5 );
 		}
-		Addressing( &valueHolder, memory[current].flag );
+		Addressing( &valueHolder, memory[current_g].flag );
 
 		switch ( opCodeInt ) // store
 		{
@@ -201,13 +194,13 @@ todo: check if it can recieve even less arguments since it already recieves the 
 	if ( opCodeInt == 60 || opCodeInt == 48 || opCodeInt == 52 || opCodeInt == 56 || opCodeInt == 72 )
 	{
 		valueHolder = *value;
-		if ( memory[current].size == 3 )
+		if ( memory[current_g].size == 3 )
 		{
-			valueHolder = HexToDecimal( memory[current].lastBits, 3 );
+			valueHolder = HexToDecimal( memory[current_g].lastBits, 3 );
 		} else {
-			valueHolder = HexToDecimal( memory[current].lastBits, 5 );
+			valueHolder = HexToDecimal( memory[current_g].lastBits, 5 );
 		}
-		Addressing( &valueHolder, memory[current].flag );
+		Addressing( &valueHolder, memory[current_g].flag );
 
 		switch ( opCodeInt )
 		{
@@ -397,7 +390,6 @@ todo: check if it can recieve even less arguments since it already recieves the 
 			itoaB( *value, out, 10 );
 			printf( "\n------------- \n" );
 			printf( "[OUTPUT]: %s", out );
-			//appendTextToOutput( out );
 			break;
 		
 		default: // yeah

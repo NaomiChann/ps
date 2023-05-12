@@ -6,7 +6,7 @@
 
 // globally accessible registers
 int reg_g[10] = { '\0' };
-int current = 0; // oh
+int current_g = 0;
 
 // prototypes
 void AmnesiaTreatment();
@@ -18,17 +18,18 @@ void RegUIgas();
 ===================
 AmnesiaTreatment
 -------------------
-Does memory mapping for the vm then
-manages it during the execution
+Main memory mapping (loader) function
+while also partially executing
 ===================
 */
 void AmnesiaTreatment()
-{ // todo: needs something to recognize allocation
+{
 	mem_t memory[MEMORY_MAX_ADDRESS] = { 0 };
 	FILE* fileInput = fopen( "program/assembled.txt", "r" );
 
-	int instSize, startAdd, target, helper[2] = { 0 };
+	int instSize, startAdd, target, helper[2] = { 0 }, mapper = 0;
 	char temp[2] = { '\0' }, holding[9] = { '\0' }, test[3] = { '\0' };
+	char mapo[9] = { '\0' };
 	char line[256] = { '\0' };
 
 	fgets( line, sizeof( line ), fileInput );
@@ -36,6 +37,9 @@ void AmnesiaTreatment()
 	startAdd = HexToDecimal( holding, 8 );
 
 	printf( "\n.\n.\n.\n\nMEMORY MAPPING STARTED\n" );
+	printf( "==============================================\n");
+	printf( "3KB MEMORY, 1024 SETS OF 24 BITS, BYTE ADDRESSED \n");
+	printf( "==============================================\n");
 
 	while ( fgets( line, sizeof( line ), fileInput ) )
 	{
@@ -122,11 +126,30 @@ void AmnesiaTreatment()
 
 		}
 
+		if ( mapper == 0 )
+		{
+			while ( i > mapper )
+			{
+				if ( mapper % 3 == 0 || mapper == 0 )
+				{
+					printf( "\n0x%s | ", Filler( DecimalToHex( mapper ), 4 ) );
+				}
+
+				printf( "00 " );
+				++mapper;
+			}
+		}
+
 		for ( int j = 0; j < memory[i].size; ++j )
 		{
+			if ( mapper % 3 == 0 || mapper == 0 )
+			{
+				printf( "\n0x%s | ", Filler( DecimalToHex( mapper ), 4 ) );
+			}
+			++mapper;
 			char out[3] = { '\0' };
 			memcpy( out, &memory[i].objCode[j * 2], 2 );
-			//addDataGridItem( out );
+			printf( "%s ", out );
 		}
 		
 		i += instSize;
@@ -138,7 +161,7 @@ void AmnesiaTreatment()
 	// sets pc to start addrest
 	reg_g[R_PC] = startAdd;
 	
-	printf( "CONCLUDED\n" );
+	printf( "\n\nCONCLUDED\n" );
 
 ////////////////////////////
 
@@ -157,9 +180,8 @@ void AmnesiaTreatment()
 
 	while ( 1 ) // main executiion loop
 	{
-		//Sleep( posUI_g * 100 );
-		current = reg_g[R_PC]; // sets current line as pc
-		instSize = memory[current].size;
+		current_g = reg_g[R_PC]; // sets current_g line as pc
+		instSize = memory[current_g].size;
 		reg_g[R_PC] += instSize; // increments pc to next location
 		if ( instSize == 0 )
 		{
@@ -168,41 +190,31 @@ void AmnesiaTreatment()
 		}
 		
 		printf( "\n============= \n" );
-		printf( "%-3X| %s", ( reg_g[R_PC] - instSize ), memory[current].objCode );
+		printf( "%-3X| %s", ( reg_g[R_PC] - instSize ), memory[current_g].objCode );
 		printf( "\n------------- \n" );
-		printf( "%s ", memory[current].opCode );
-		//RegUIgas();
+		printf( "%s ", memory[current_g].opCode );
 
 		// checks for end reading keyword BABABABE
-		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
+		if ( strcmp( memory[current_g].objCode, "BABABABE" ) == 0 ) {
 			printf( "END READING" );
 			printf( "\n============= \n\n" );
 			printf( "A: %d X: %d L: %d \nB: %d S: %d T: %d \nPC: %d SW: %d \n\n", reg_g[R_A], reg_g[R_X], reg_g[R_L], reg_g[R_B], reg_g[R_S], reg_g[R_T], reg_g[R_PC], reg_g[R_SW] );
 			return;
 		}
-
-		// used to work for checking any space out of the format sizes, will not work with allocated spaces
-		// probably some special checking for allocated spaces and rejecting anything other than "populated locations"
-		/*
-		if ( memory[current].size < 1 || memory[current].size > 4 ) {
-			fputs( "\n=!=!=!=!=!=!= \n\nSEGMENTATION FAULT \n\n=!=!=!=!=!=!= \n", stderr );
-			return EXIT_FAILURE;
-		}
-		*/
 		
 		if ( instSize > 2 )
 		{
-			printf( "%s ", memory[current].lastBits );
+			printf( "%s ", memory[current_g].lastBits );
 		}
 		printf( "\n" );
 		
-		InstructionTable( memory[current].opCode );
+		InstructionTable( memory[current_g].opCode );
 
 		if ( instSize > 2 )
 		{
 			for ( int i = 0; i < 6; i++ )
 			{
-				printf( "%d", ( int ) memory[current].flag[i] );
+				printf( "%d", ( int ) memory[current_g].flag[i] );
 			}
 		}
 		
@@ -210,36 +222,35 @@ void AmnesiaTreatment()
 		switch ( instSize ) // format detection
 		{
 			case 1:
-				// works for now, will break with allocation
 				target = reg_g[R_PC];
 				break;
 
 			case 2:
-				memcpy( temp, &( memory[current].objCode[2] ), 1 ); // fetches r1
+				memcpy( temp, &( memory[current_g].objCode[2] ), 1 ); // fetches r1
 				helper[0] = atoi( temp );
 				printf( "r1 %d ", helper[0] );
 
-				memcpy( temp, &( memory[current].objCode[3] ), 1 ); // fetches r2
+				memcpy( temp, &( memory[current_g].objCode[3] ), 1 ); // fetches r2
 				helper[1] = atoi( temp );
 				printf( "r2 %d", helper[1] );
 
 				target = reg_g[R_PC];
-				AlolanExeggcutor( memory[current].opCodeInt, NULL, helper, memory );
+				AlolanExeggcutor( memory[current_g].opCodeInt, NULL, helper, memory );
 				break;
 
 			case 3:
-				target = HexToDecimal( memory[current].lastBits, 3 );
+				target = HexToDecimal( memory[current_g].lastBits, 3 );
 
-				if ( !memory[current].flag[F_N] && !memory[current].flag[F_I] ) // standard sic
+				if ( !memory[current_g].flag[F_N] && !memory[current_g].flag[F_I] ) // standard sic
 				{
-					target = HexToDecimal( memory[current].lastBits, 4 );
+					target = HexToDecimal( memory[current_g].lastBits, 4 );
 				}
-				SixBitAddressing( memory[current].flag, &target, memory[current].opCodeInt, helper, memory );
+				SixBitAddressing( memory[current_g].flag, &target, memory[current_g].opCodeInt, helper, memory );
 				break;
 
 			case 4:
-				target = HexToDecimal( memory[current].lastBits, 5 );
-				SixBitAddressing( memory[current].flag, &target, memory[current].opCodeInt, helper, memory );
+				target = HexToDecimal( memory[current_g].lastBits, 5 );
+				SixBitAddressing( memory[current_g].flag, &target, memory[current_g].opCodeInt, helper, memory );
 				break;
 
 			default:
@@ -253,6 +264,13 @@ void AmnesiaTreatment()
 	return;
 }
 /*
+/
+===================
+RegUIgas
+-------------------
+Gui register updating functionality
+===================
+/
 void RegUIgas()
 {
 	char guito[10] = { '\0' };

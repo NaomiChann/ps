@@ -21,6 +21,15 @@ void RustRemover( char* removee );
 void Arganizer( int argCount, char argtab[32][8], char* argline );
 void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOriginal[32][8] );
 
+/*
+===================
+Marcos
+-------------------
+Main macro processing function
+outputs macro definitions (for
+its own use) and expanded file
+===================
+*/
 int main()
 {
 	printf( "\nINITIALIZING. . .\n" );
@@ -63,6 +72,13 @@ int main()
 	return 0;
 }
 
+/*
+===================
+GetItTogether
+-------------------
+Gets line if not currently expanding
+===================
+*/
 void GetItTogether()
 {
 	if ( !expanding_g )
@@ -71,6 +87,14 @@ void GetItTogether()
 	}
 }
 
+/*
+===================
+Nanami
+-------------------
+Expands if it finds a defined macro
+or defines if it finds the MACRO directive 
+===================
+*/
 void Nanami( line_t process )
 {
 	for ( int i = 0; i < indexMacro_g; ++i )
@@ -78,13 +102,6 @@ void Nanami( line_t process )
 		if ( strcmp( process.operation, namTab_g[i] ) == 0 )
 		{
 			printf( "\nEXPANDING %s. . .\n", namTab_g[i] );
-			/*
-			char guiout[100] = { '\0' };
-			strcat( guiout, "\nEXPANDING " );
-			strcat( guiout, namTab_g[i] );
-			strcat( guiout, ". . .\n" );
-			appendTextToOutput( guiout );
-			*/
 			ExpandOmori( namTab_g[i], process.operand );
 			expanding_g = false;
 			return;
@@ -110,6 +127,14 @@ void Nanami( line_t process )
 	}
 }
 
+/*
+===================
+Arganizer
+-------------------
+Organizes arguments passed to a macro
+into an array of arguments (namtab)
+===================
+*/
 void Arganizer( int argCount, char argtab[32][8], char* argline )
 {
 	for ( int i = 0; i < argCount; ++i )
@@ -133,6 +158,15 @@ void Arganizer( int argCount, char argtab[32][8], char* argline )
 	}
 }
 
+/*
+===================
+Exchanger
+-------------------
+Takes '&' argument labels and
+translates them for the macro
+arguments provided during the call
+===================
+*/
 void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOriginal[32][8] )
 {
 	if ( exchangee != NULL )
@@ -180,6 +214,15 @@ void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOrigi
 	}
 }
 
+/*
+===================
+Alphies
+-------------------
+Takes a label and, based on the
+macro expansion index, inserts
+an alphanumeric number after '$'
+===================
+*/
 void Alphies( char* line, char* alpha )
 {
 	char holder[256] = { '\0' };
@@ -202,6 +245,13 @@ void Alphies( char* line, char* alpha )
 	}
 }
 
+/*
+===================
+ExpandOmori
+-------------------
+EXPAND
+===================
+*/
 void ExpandOmori( char* macro, char* argInput )
 {
 	line_t expand = { 0 };
@@ -267,17 +317,6 @@ void ExpandOmori( char* macro, char* argInput )
 				}
 				
 				printf( "EXPANDING %s. . .\n", namTab_g[i] );
-				/*
-				char guiout[100] = { '\0' };
-				for ( int j = 0; j < levelExpansion_g; ++j )
-				{
-					strcat( guiout, "\t" );
-				}
-				strcat( guiout, "\nEXPANDING " );
-				strcat( guiout, namTab_g[i] );
-				strcat( guiout, ". . .\n" );
-				appendTextToOutput( guiout );
-				*/
 				Alphies( expand.operand, alpha );
 				ExpandOmori( namTab_g[i], expand.operand );
 				rewind( fileDeftab_g );
@@ -296,8 +335,6 @@ void ExpandOmori( char* macro, char* argInput )
 				}
 				
 				fgets( lineExpand, sizeof( lineExpand ), fileDeftab_g );
-				
-				//Fetcher( lineExpand, &expand );
 				++indexExpansion;
 				break;
 			}
@@ -327,20 +364,18 @@ void ExpandOmori( char* macro, char* argInput )
 			}
 			printf( "EXPANDED\n" );
 			--levelExpansion_g;
-			/*
-			char guiout[100] = { '\0' };
-			for ( int j = 0; j < levelExpansion_g - 1; ++j )
-			{
-				strcat( guiout, "\t" );
-			}
-			strcat( guiout, "EXPANDED" );
-			appendTextToOutput( guiout );
-			*/
 			return;
 		}
 	}
 }
 
+/*
+===================
+DelfinoPlaza
+-------------------
+Defines
+===================
+*/
 void DelfinoPlaza()
 {
 	line_t define = { 0 };
@@ -372,6 +407,14 @@ void DelfinoPlaza()
 	printf( "DEFINED\n" );
 }
 
+/*
+===================
+RustRemover
+-------------------
+Removes '&' characters for
+easier usage
+===================
+*/
 void RustRemover( char* removee )
 {
 	if ( strstr( removee, "&" ) != NULL )

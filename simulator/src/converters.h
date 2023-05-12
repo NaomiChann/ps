@@ -224,7 +224,6 @@ void LeftStrip( char * s )
 	{
 		++p, --l;
 	}
-	//strcat( p, "\n" );
 	memmove( s, p, l + 1 );
 }
 

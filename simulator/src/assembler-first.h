@@ -1,7 +1,7 @@
 #include "assembler-second.h"
 
 // GLOBAL
-const char* directives[] = { "BYTE", "WORD", "RESB", "RESW", "EQU", "BASE", "NOBASE", "END", "START" };
+const char* directives_g[] = { "BYTE", "WORD", "RESB", "RESW", "EQU", "BASE", "NOBASE", "END", "START" };
 
 void Mounty();
 void Fetcher( char* line, line_t* programLine );
@@ -11,6 +11,15 @@ int IWontByte( line_t* programLine );
 void Printy( line_t* programLine, int length );
 void DidYouComme( char* source );
 
+
+/*
+===================
+Mounty
+-------------------
+Main first pass assembling function
+outputs intermediate formatted file
+===================
+*/
 void Mounty()
 {
 	FILE* fileProgram = fopen( "program/MASMAPRG.asm", "r" );
@@ -136,7 +145,7 @@ bool LabelDuplicates( char* label, int loc )
 LocUpdate
 -------------------
 Checks instruction table for instruction format, also
-treats memory allocation directives and extended formats
+treats memory allocation directives_g and extended formats
 ===================
 */
 int LocUpdate( line_t* programLine )
@@ -182,7 +191,7 @@ int LocUpdate( line_t* programLine )
 	{
 		for ( int i = 0; i < 5; ++i )
 		{
-			if ( strcmp( programLine->operation, directives[i] ) == 0 )
+			if ( strcmp( programLine->operation, directives_g[i] ) == 0 )
 			{
 				switch ( i )
 				{
@@ -307,7 +316,7 @@ void Printy( line_t* programLine, int length )
 
 	for ( int i = 0; i < 9; ++i )
 	{
-		if ( strcmp( programLine->operation, directives[i] ) == 0 )
+		if ( strcmp( programLine->operation, directives_g[i] ) == 0 )
 		{
 			directive = true;
 			break;

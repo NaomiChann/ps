@@ -1,7 +1,7 @@
 #include "maquinae.h"
 
 // GLOBAL
-extern const char* directives[];
+extern const char* directives_g[];
 bool lebo_g = false, here_g = false;
 
 typedef struct l
@@ -24,8 +24,8 @@ bool Jumper( char* operation );
 ===================
 MountyTheEvilTwin
 -------------------
-Performs the second pass and outputs the
-assembled file for execution
+Main second pass assembling function
+outputs the assembled file for execution
 ===================
 */
 void MountyTheEvilTwin()
@@ -163,7 +163,7 @@ void FetcherTheEvilTwink( char* line, line_t* programLine )
 ===================
 CheckInstruction
 -------------------
-Fetches opcode and (kind of) treats directives
+Fetches opcode and (kind of) treats directives_g
 ===================
 */
 void CheckInstruction( line_t* programLine, char* op )
@@ -190,7 +190,7 @@ void CheckInstruction( line_t* programLine, char* op )
 	{
 		for ( int i = 0; i < 5; ++i )
 		{
-			if ( strcmp( programLine->operation, directives[i] ) == 0 )
+			if ( strcmp( programLine->operation, directives_g[i] ) == 0 )
 			{
 				switch ( i )
 				{

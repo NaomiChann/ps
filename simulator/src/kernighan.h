@@ -54,6 +54,7 @@ void itoaB(int value, char* str, int base) {
 	
 }
 
+// Modified itoa for alphanumeric capability
 void itoaAlpha(int value, char* str, int base) {
 	
 	static char num[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
