@@ -69,7 +69,7 @@ char* InstructionTable( const char* opCode )
 		{
 			strcpy( instruction, strtok( line, " " ) );
 
-			printf( "instruction %s \n", instruction );
+			printf( "%s \n", instruction );
 			//setCurrentInstruction( instruction );
 
 			fclose( table );
@@ -395,7 +395,8 @@ todo: check if it can recieve even less arguments since it already recieves the 
 		case 220: // WD
 			char out[16] = { '\0' };
 			itoaB( *value, out, 10 );
-			printf( "\n%s", out );
+			printf( "\n------------- \n" );
+			printf( "[OUTPUT]: %s", out );
 			//appendTextToOutput( out );
 			break;
 		

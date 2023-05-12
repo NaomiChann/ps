@@ -35,7 +35,7 @@ void AmnesiaTreatment()
 	strcpy( holding, strtok( line, "\n" ) );
 	startAdd = HexToDecimal( holding, 8 );
 
-	printf( "\nMEMORY MAPPING STARTED\n" );
+	printf( "\n.\n.\n.\n\nMEMORY MAPPING STARTED\n" );
 
 	while ( fgets( line, sizeof( line ), fileInput ) )
 	{
@@ -146,7 +146,14 @@ void AmnesiaTreatment()
 
 ////////////////////////////
 	
-	printf( "\n\nSTARTING EXECUTION. . .\n" );
+	printf( "\n.\n.\n.\n\nSTARTING EXECUTION. . .\n" );
+	printf( "\n============= \n" );
+	printf( "ADD| OBJCODE" );
+	printf( "\n------------- \n" );
+	printf( "OP ADD/DISP \n" );
+	printf( "INSTRUCTION \nFLAGS/OPERANDS" );
+
+
 
 	while ( 1 ) // main executiion loop
 	{
@@ -161,7 +168,9 @@ void AmnesiaTreatment()
 		}
 		
 		printf( "\n============= \n" );
-		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
+		printf( "%-3X| %s", ( reg_g[R_PC] - instSize ), memory[current].objCode );
+		printf( "\n------------- \n" );
+		printf( "%s ", memory[current].opCode );
 		//RegUIgas();
 
 		// checks for end reading keyword BABABABE

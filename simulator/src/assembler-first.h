@@ -22,7 +22,7 @@ void Mounty()
 	ClearFile( "tables/symbol.txt" );
 	ClearFile( "program/flagged.txt" );
 
-	printf( "\nSTARTING ASSEMBLY\n" );
+	printf( ".\n.\n.\n\nSTARTING ASSEMBLY\n\n" );
 	printf( "FIRST PASS. . .\n" );
 
 	while ( fgets( line, sizeof( line ), fileProgram ) )

@@ -262,7 +262,12 @@ void ExpandOmori( char* macro, char* argInput )
 		{
 			if ( strcmp( expand.operation, namTab_g[i] ) == 0 )
 			{
-				printf( "\nEXPANDING %s. . .\n", namTab_g[i] );
+				for ( int j = 0; j <= expansionId; ++j )
+				{
+					printf( "|\t" );
+				}
+				
+				printf( "EXPANDING %s. . .\n", namTab_g[i] );
 				/*
 				char guiout[100] = { '\0' };
 				for ( int j = 0; j < levelExpansion_g; ++j )
@@ -274,6 +279,7 @@ void ExpandOmori( char* macro, char* argInput )
 				strcat( guiout, ". . .\n" );
 				appendTextToOutput( guiout );
 				*/
+				Alphies( expand.operand, alpha );
 				ExpandOmori( namTab_g[i], expand.operand );
 				rewind( fileDeftab_g );
 				strcpy( dummy, lineExpand );
@@ -308,10 +314,20 @@ void ExpandOmori( char* macro, char* argInput )
 				Exchanger( expand.operand, argCount, argtab, argOriginal );
 			}
 			
-			printf( "%s\t%s\t%s\n", expand.label, expand.operation, expand.operand );
+			for ( int j = 0; j < expansionId; ++j )
+			{
+				printf( "|\t" );
+			}
+			
+			printf( "|%s\t%s\t%s\n", expand.label, expand.operation, expand.operand );
 			fprintf( fileOutput_g, "%s\t%s\t%s\n", expand.label, expand.operation, expand.operand );
 		} else {
-			printf( "EXPANDED\n\n" );
+			for ( int j = 0; j < expansionId; ++j )
+			{
+				printf( "|\t" );
+			}
+			printf( "EXPANDED\n" );
+			--levelExpansion_g;
 			/*
 			char guiout[100] = { '\0' };
 			for ( int j = 0; j < levelExpansion_g - 1; ++j )
@@ -321,7 +337,6 @@ void ExpandOmori( char* macro, char* argInput )
 			strcat( guiout, "EXPANDED" );
 			appendTextToOutput( guiout );
 			*/
-			--levelExpansion_g;
 			return;
 		}
 	}

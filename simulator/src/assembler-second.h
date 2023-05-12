@@ -90,7 +90,7 @@ void MountyTheEvilTwin()
 	fclose( fileOutput );
 	
 	printf( "CONCLUDED\n\n" );
-	printf( "PROGRAM MOUNTED\n\n" );
+	printf( "PROGRAM ASSEMBLED\n\n" );
 
 	AmnesiaTreatment();
 }
