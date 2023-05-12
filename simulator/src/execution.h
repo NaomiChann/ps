@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "converters.h"
-#include "hermes.h"
+//#include "hermes.h"
 
 // GLOBAL
 extern int reg_g[10];
@@ -58,19 +58,19 @@ char* InstructionTable( const char* opCode )
 {
 	FILE* table = fopen( "tables/instruction.txt", "r" );
 	static char instruction[7];
-	char line[10] = { '\0' }, temp[4] = { '\0' };
+	char line[16] = { '\0' }, temp[4] = { '\0' }, santiago[4] = " ";
 
 	memset( instruction, '\0', 7 );
+	strcat( santiago, opCode );
 
 	while ( fgets( line, sizeof( line ), table ) != NULL )
 	{
-		if ( strstr( line, opCode ) )
+		if ( strstr( line, santiago ) )
 		{
-			strcat( temp, opCode );
-			memcpy( instruction, line, ( int ) strcspn( line, temp ) );
+			strcpy( instruction, strtok( line, " " ) );
 
 			printf( "instruction %s \n", instruction );
-			setCurrentInstruction( instruction );
+			//setCurrentInstruction( instruction );
 
 			fclose( table );
 			return instruction; 
@@ -395,9 +395,8 @@ todo: check if it can recieve even less arguments since it already recieves the 
 		case 220: // WD
 			char out[16] = { '\0' };
 			itoaB( *value, out, 10 );
-			strcat( out, "\n" );
 			printf( "\n%s", out );
-			appendTextToOutput( out );
+			//appendTextToOutput( out );
 			break;
 		
 		default: // yeah

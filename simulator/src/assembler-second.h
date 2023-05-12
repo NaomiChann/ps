@@ -2,6 +2,7 @@
 
 // GLOBAL
 extern const char* directives[];
+bool lebo_g = false, here_g = false;
 
 typedef struct l
 {
@@ -31,7 +32,7 @@ void MountyTheEvilTwin()
 {
 	FILE* fileOutput = fopen( "program/assembled.txt", "w" );
 	FILE* fileInput = fopen( "program/flagged.txt", "r" );
-	char line[256] = { '\0' }, opCodeF[13];
+	char line[256] = { '\0' }, opCodeF[13] = { '\0' };
 
 	printf( "SECOND PASS. . .\n" );
 
@@ -40,6 +41,8 @@ void MountyTheEvilTwin()
 		line_t programLine = { 0 };
 		memset( opCodeF, '\0', 13 );
 		FetcherTheEvilTwink( line, &programLine );
+		lebo_g = false;
+		here_g = false;
 
 		if ( strcmp( programLine.operation, "END" ) == 0 )
 		{
@@ -51,6 +54,12 @@ void MountyTheEvilTwin()
 		{
 			fprintf( fileOutput, "%s\n", Filler( DecimalToHex( atoi( programLine.operand ) ), 8 ) );
 			continue;
+		}
+
+		if ( programLine.operand[0] == '[' )
+		{
+			programLine.operand = &programLine.operand[1];
+			lebo_g = true;
 		}
 
 		CheckInstruction( &programLine, opCodeF );
@@ -67,6 +76,10 @@ void MountyTheEvilTwin()
 				fprintf( fileOutput, "000000\n" );
 			}
 		} else {
+			if ( lebo_g && !here_g )
+			{
+				fprintf( fileOutput, "R" );
+			}
 			fprintf( fileOutput, "%s", programLine.operation );
 			fprintf( fileOutput, "%s", programLine.operand );
 			fprintf( fileOutput, "\n" );
@@ -175,7 +188,7 @@ void CheckInstruction( line_t* programLine, char* op )
 
 	if ( strlen( op ) == 0 )
 	{
-		for ( int i = 0; i < 4; ++i )
+		for ( int i = 0; i < 5; ++i )
 		{
 			if ( strcmp( programLine->operation, directives[i] ) == 0 )
 			{
@@ -185,6 +198,9 @@ void CheckInstruction( line_t* programLine, char* op )
 						break;
 
 					case 3: // RESW
+						break;
+
+					case 4: // EQU
 						break;
 
 					default:
@@ -256,7 +272,7 @@ void ValueYourself( line_t* programLine, char format )
 	FILE* fileSymtab = fopen( "tables/symbol.txt", "r" );
 	char operand1[9] = { '\0' }, operand2[2] = { '\0' };
 	char line[256] = { '\0' }, value[18] = { '\0' }, tempValue[8] = { '\0' };
-	bool multi = false;
+	bool multi = false, imme = false;
 
 	strcpy( value, programLine->operand );
 
@@ -274,6 +290,11 @@ void ValueYourself( line_t* programLine, char format )
 
 		strcpy( value, operand1 );
 	} else {
+		if ( value[0] == '*' )
+		{
+			imme = true;
+		}
+
 		strcpy( operand1, value );
 	}
 // somewhere around here
@@ -283,6 +304,7 @@ void ValueYourself( line_t* programLine, char format )
 	{
 		if ( strcmp( value, strtok( line, "\t" ) ) == 0 )
 		{
+			here_g = true;
 			if ( format == '2' )
 			{
 				strcat( programLine->operand, strtok( NULL, "\n" ) );
@@ -291,8 +313,8 @@ void ValueYourself( line_t* programLine, char format )
 					multi = false;
 					rewind( fileSymtab );
 					strcpy( value, operand2 );
-				} else if ( strlen( programLine->operand ) == 1 )
-				{
+					
+				} else if ( strlen( programLine->operand ) == 1 ) {
 					strcat( programLine->operand, "0" );
 					break;
 				} else {
@@ -314,8 +336,29 @@ void ValueYourself( line_t* programLine, char format )
 			temp = 5;
 		}
 
-		int destLoc = atoi( tempValue );
-		int currLoc = programLine->loc + atoi( &format );
+		if ( lebo_g && !here_g )
+		{
+			char fil[5] = { '\0' };
+			strcat( programLine->operand, Filler( fil, temp ) );
+			fclose( fileSymtab );
+			return;
+		}
+
+		int destLoc;
+		int currLoc;
+		if ( imme )
+		{
+			currLoc = programLine->loc;
+			if ( strlen( operand1 ) > 1  )
+			{
+				destLoc = currLoc + atoi( &operand1[1] );
+			} else {
+				destLoc = currLoc;
+			}
+		} else {
+			currLoc = programLine->loc + atoi( &format );
+			destLoc = atoi( tempValue );
+		}
 		
 		if ( programLine->flags[F_N] == '0' && programLine->flags[F_I] == '1' )
 		{
@@ -324,7 +367,7 @@ void ValueYourself( line_t* programLine, char format )
 			return;
 		}
 
-		if ( Jumper( programLine->operand ) )
+		if ( Jumper( programLine->operand ) || imme )
 		{
 			if ( destLoc < currLoc )
 			{

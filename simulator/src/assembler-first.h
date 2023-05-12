@@ -1,7 +1,7 @@
 #include "assembler-second.h"
 
 // GLOBAL
-const char* directives[] = { "BYTE", "WORD", "RESB", "RESW", "BASE", "NOBASE", "END", "START" };
+const char* directives[] = { "BYTE", "WORD", "RESB", "RESW", "EQU", "BASE", "NOBASE", "END", "START" };
 
 void Mounty();
 void Fetcher( char* line, line_t* programLine );
@@ -180,7 +180,7 @@ int LocUpdate( line_t* programLine )
 
 	if ( formatInt == 0 )
 	{
-		for ( int i = 0; i < 4; ++i )
+		for ( int i = 0; i < 5; ++i )
 		{
 			if ( strcmp( programLine->operation, directives[i] ) == 0 )
 			{
@@ -305,7 +305,7 @@ void Printy( line_t* programLine, int length )
 		fprintf( fileOut, "%d\t", programLine->loc );
 	}
 
-	for ( int i = 0; i < 8; ++i )
+	for ( int i = 0; i < 9; ++i )
 	{
 		if ( strcmp( programLine->operation, directives[i] ) == 0 )
 		{
@@ -325,16 +325,19 @@ void Printy( line_t* programLine, int length )
 			flags[F_N] = false;
 			flags[F_I] = true;
 			programLine->operand = &(programLine->operand[1]);
-		} else if ( programLine->operand[0] == '*' ) { // relative
-			flags[F_N] = false;
-			flags[F_I] = true;
-			programLine->operand = &(programLine->operand[1]);
-			int holder = atoi( programLine->operand );
-			holder = holder + programLine->loc;
-			itoaB( holder, programLine->operand, 10 );
 		} else { // simple
+			char* tem = ( char* ) malloc( sizeof( char ) * ( strlen( programLine->operand ) + 2 ) );
+			memset( tem, '\0', strlen( programLine->operand ) + 2 );
 			flags[F_N] = true;
 			flags[F_I] = true;
+
+			if ( programLine->operand[0] != '*' )
+			{
+				strcpy( tem, "[" );
+			}
+			strcat( tem, programLine->operand );
+			strcpy( programLine->operand, tem );
+			free( tem );
 
 			if ( strstr( programLine->operand, ", X" ) != NULL ) // indexed
 			{

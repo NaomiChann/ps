@@ -41,6 +41,12 @@ void AmnesiaTreatment()
 	{
 		static int i = 0;
 
+		if ( line[0] == 'R' )
+		{
+			fputs( "\n=!=!=!=!=!=!= \n\nEXTERNAL REFFERENCE \n\n=!=!=!=!=!=!= \n\n" , stderr );
+			return;
+		}
+
 		if ( i == 0 )
 		{
 			i = startAdd;
@@ -68,7 +74,8 @@ void AmnesiaTreatment()
 			case 3:
 				memset( temp, '\0', 2 ); // clears temp
 				// takes first byte from obj code, since these are all from opcode
-				memcpy( test, &( HexDigitToBinary4bit( memcpy( temp, &( memory[i].objCode[1] ), 1 ) )[2] ), 2 );
+				memcpy( temp, &( memory[i].objCode[1] ), 1 );
+				memcpy( test, &( HexDigitToBinary4bit( temp )[2] ), 2 );
 				
 				if ( strcmp( test, "00" ) != 0 ) // regular format 3
 				{
@@ -119,7 +126,7 @@ void AmnesiaTreatment()
 		{
 			char out[3] = { '\0' };
 			memcpy( out, &memory[i].objCode[j * 2], 2 );
-			addDataGridItem( out );
+			//addDataGridItem( out );
 		}
 		
 		i += instSize;
@@ -143,7 +150,7 @@ void AmnesiaTreatment()
 
 	while ( 1 ) // main executiion loop
 	{
-		Sleep( posUI_g * 100 );
+		//Sleep( posUI_g * 100 );
 		current = reg_g[R_PC]; // sets current line as pc
 		instSize = memory[current].size;
 		reg_g[R_PC] += instSize; // increments pc to next location
@@ -155,7 +162,7 @@ void AmnesiaTreatment()
 		
 		printf( "\n============= \n" );
 		printf( "%X | %s \n%s ", ( reg_g[R_PC] - instSize ), memory[current].objCode, memory[current].opCode );
-		RegUIgas();
+		//RegUIgas();
 
 		// checks for end reading keyword BABABABE
 		if ( strcmp( memory[current].objCode, "BABABABE" ) == 0 ) {
@@ -176,8 +183,9 @@ void AmnesiaTreatment()
 		
 		if ( instSize > 2 )
 		{
-			printf( "%s \n", memory[current].lastBits );
+			printf( "%s ", memory[current].lastBits );
 		}
+		printf( "\n" );
 		
 		InstructionTable( memory[current].opCode );
 
@@ -235,7 +243,7 @@ void AmnesiaTreatment()
 
 	return;
 }
-
+/*
 void RegUIgas()
 {
 	char guito[10] = { '\0' };
@@ -256,6 +264,7 @@ void RegUIgas()
 	itoaB( reg_g[R_SW], guito, 10 );
 	setSW( guito );
 }
+*/
 
 /*
 ===================
@@ -287,7 +296,8 @@ void SixBitOp( char* obj, char* opCode, bool* flag, char* lastBits, int* opCodeI
 
 			case 1: // 5-8th bits
 				// first 2 bits from the second digit are opcode, then flag n and i
-				strcpy( midBin, HexDigitToBinary4bit( memcpy( temp, &obj[i], 1 ) ) );
+				memcpy( temp, &obj[i], 1 );
+				strcpy( midBin, HexDigitToBinary4bit( temp ) );
 				memcpy( temp, midBin, 2 ); // first half to opcode
 				strcpy( op, temp );
 				strcat( op, "00" ); // fills the right with zeros to complete a byte

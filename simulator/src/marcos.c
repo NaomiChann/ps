@@ -21,7 +21,7 @@ void RustRemover( char* removee );
 void Arganizer( int argCount, char argtab[32][8], char* argline );
 void Exchanger( char* exchangee, int argCount, char argtab[32][8], char argOriginal[32][8] );
 
-int Mamma()
+int main()
 {
 	printf( "\nINITIALIZING. . .\n" );
 	ClearFile( "tables/name.txt" );
